@@ -1,0 +1,2 @@
+_target_: bioblue.module.ThresholdSegment
+segmenter: "${model}"

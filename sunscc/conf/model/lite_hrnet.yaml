@@ -1,0 +1,27 @@
+_target_: bioblue.model.LiteHRNet
+input_format: ["image"]
+output_format: ["segmentation"]
+classes: [ "penumbra", "umbra"]
+in_channels: 1
+architecture:
+  stem:
+    in_channels: ${model.in_channels}
+    stem_channels: 32
+    out_channels: 32
+    expand_ratio: 1
+    keep_dim: True
+  num_stages: 3
+  stages_spec:
+    num_modules: [2,4,2]
+    num_branches: [2,3,4]
+    num_blocks: [2,2,2]
+    module_type: ['LITE', 'LITE', 'LITE']
+    with_fuse: [True, True, True]
+    reduce_ratios: [8, 8, 8]
+    num_channels:
+        - [40, 80]
+        - [40, 80, 160]
+        - [40, 80, 160, 320]
+  with_head: True
+norm_eval: False
+with_cp: False

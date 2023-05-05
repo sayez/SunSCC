@@ -1,0 +1,43 @@
+_target_: bioblue.model.McIntoshClassifier_Generic
+
+input_format: 
+    visual: ["image", "mask","mask_one_hot", "mask_LargestSpot"]
+    numeric: [ "angular_excentricity", "centroid_Lat" ]
+
+output_format: ["class1","class2","class3"]
+
+classes: ${use_classes}
+first_classes: ${first_classes}
+second_classes: ${second_classes}
+third_classes: ${third_classes}
+
+cascade: true
+double_encoder: false
+
+num_channels_offset: 0
+
+# architecture:
+#   encoder:
+#     type: 'mobilenet'
+#     mobilenet_version: 'v2'
+#     pretrained: true
+#   MLP1: [512,256,256,128]
+#   MLP2: [512,256,256,128]
+#   MLP3: [512,256,256,128]
+
+architecture:
+  encoder:
+    type: 'new_resnet'
+    resnet_version: '34'
+    pretrained: true
+    in_channels: 3
+    
+  MLP1: [512,256,256,128]
+  MLP2: [512,256,256,128]
+  MLP3: [512,256,256,128]
+
+focus_on_largest_sunspot: True
+
+# parts_to_train: ['encoder','MLP1','MLP2','MLP3']
+parts_to_train: ['encoder','MLP1']
+# parts_to_train: ['MLP2','MLP3']

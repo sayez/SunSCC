@@ -1,0 +1,43 @@
+_target_: bioblue.module.DeepsunSegmentation_TTA
+segmenter: "${model}"
+lr: 1.e-4
+optimizer: torch.optim.AdamW
+
+loss:
+  _target_: bioblue.loss.CombineLosses
+  ignore_index: ${dataset.void_label}
+  sublossA: 
+    _target_: torch.nn.CrossEntropyLoss
+    ignore_index: ${dataset.void_label}
+  sublossB: 
+    _target_: bioblue.loss.LogCosHDiceLoss
+    ignore_index: ${dataset.void_label}
+    softmax: true
+    to_onehot_target: true
+    include_background: true
+  ce_ratio: 0.5
+  include_background: true
+
+class_weights: [1,20]
+
+
+# scheduler:
+#   _target_: torch.optim.lr_scheduler.MultiStepLR
+#   milestones: [30, 50]
+#   gamma: 0.1
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.StepLR
+  step_size: 1
+  gamma: 0.9
+  last_epoch: -1
+
+# scheduler_interval: 'step'
+scheduler_interval: 'epoch'
+
+num_tta: 4
+transforms_tta:
+  - _target_: torchio.transforms.RandomFlip
+    axes: [1,2]
+    flip_probability: .5
+

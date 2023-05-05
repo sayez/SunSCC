@@ -1,0 +1,129 @@
+# @package _global_
+defaults:
+  - override /module: base_classification
+
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  max_epochs: 30
+  gpus: ${gpus}
+  auto_scale_batch_size: false
+  log_every_n_steps: 2
+
+logger: []
+
+use_dtypes: "???"
+use_classes: [ 'A','B','C','SuperGroup','H']
+use_json: '???'
+
+first_classes: [ 'A','B','C','SuperGroup','H']
+second_classes: [ 'x','r','sym','asym']
+third_classes: [ "x","o","frag"]
+
+module:
+  _target_: bioblue.module.McIntoshClassifier_Superclasses
+  classifier: "${model}"
+  lr: 1e-4
+  optimizer: torch.optim.AdamW
+  loss:
+    _target_: torch.nn.CrossEntropyLoss
+  
+  class1_weights: [1,1,1,1,1]
+  class2_weights: [1,1,1,1]
+  class3_weights: [1,1,1]
+  
+  scheduler:
+    _target_: torch.optim.lr_scheduler.MultiStepLR
+    milestones: [10, 30, 50]
+    gamma: 0.01
+
+img_side: 256
+focus_on_group: false
+random_move: false
+random_move_percent: .2
+
+dataset:
+  _target_: bioblue.dataset.BioblueDataModule
+  data_dir: "/globalscratch/users/n/s/nsayez/Classification_dataset/"
+  dataset_name: "2002-2019"
+  batch_size: 16
+  num_workers: 32
+  
+  train_dataset:
+    _target_: bioblue.dataset.ClassificationDatasetSuperclasses
+    partition: "train"
+    dtypes: ${use_dtypes}
+    classes: ${use_classes}
+    first_classes: ${first_classes}
+    second_classes: ${second_classes}
+    third_classes: ${third_classes}
+    json_file: ${use_json}
+    transforms:
+      - _target_: bioblue.transforms.DeepsunScaleWhitelight
+      - _target_: bioblue.transforms.DeepsunScaleExcentricityMap
+      - _target_: bioblue.transforms.DeepsunScaleConfidenceMap
+      - _target_: bioblue.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
+        standard_height: ${img_side}
+        standard_width: ${img_side}
+        focus_on_group: ${focus_on_group}
+        random_move: ${random_move}
+        random_move_percent: ${random_move_percent}
+      - _target_: bioblue.transforms.DeepsunMcIntoshScaleAdditionalInfo
+  
+
+  val_dataset:
+    _target_: bioblue.dataset.ClassificationDatasetSuperclasses
+    partition: "val"
+    dtypes: ${use_dtypes}
+    classes: ${use_classes}
+    first_classes: ${first_classes}
+    second_classes: ${second_classes}
+    third_classes: ${third_classes}
+    json_file: ${use_json}
+    transforms:
+      - _target_: bioblue.transforms.DeepsunScaleWhitelight
+      - _target_: bioblue.transforms.DeepsunScaleExcentricityMap
+      - _target_: bioblue.transforms.DeepsunScaleConfidenceMap
+      - _target_: bioblue.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
+        standard_height: ${img_side}
+        standard_width: ${img_side}
+        focus_on_group: ${focus_on_group}
+        random_move: ${random_move}
+        random_move_percent: ${random_move_percent}
+      - _target_: bioblue.transforms.DeepsunMcIntoshScaleAdditionalInfo
+   
+  test_dataset:     
+    _target_: bioblue.dataset.ClassificationDatasetSuperclasses
+    partition: "test"
+    dtypes: ${use_dtypes}
+    classes: ${use_classes}
+    first_classes: ${first_classes}
+    second_classes: ${second_classes}
+    third_classes: ${third_classes}
+    json_file: ${use_json}
+    transforms:
+      - _target_: bioblue.transforms.DeepsunScaleWhitelight
+      - _target_: bioblue.transforms.DeepsunScaleExcentricityMap
+      - _target_: bioblue.transforms.DeepsunScaleConfidenceMap
+      - _target_: bioblue.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
+        standard_height: ${img_side}
+        standard_width: ${img_side}
+        focus_on_group: ${focus_on_group}
+        random_move: ${random_move}
+        random_move_percent: ${random_move_percent}
+      - _target_: bioblue.transforms.DeepsunMcIntoshScaleAdditionalInfo
+
+callbacks:
+  wandb:
+    _target_: bioblue.callback.WandBCallback
+    log_models: false
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    dirpath: "./models"
+    save_last: true
+    monitor: val_acc1
+    mode: max
+    filename: "{epoch}-{val_meaniou:.2f}"
+  ConfusionMatrix:
+    _target_: 'bioblue.callback.McIntoshClassificationConfusionMatrixCallback'
+    normalize: 'true'

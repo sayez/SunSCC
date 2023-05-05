@@ -1,0 +1,27 @@
+_target_: bioblue.module.BaseSegment
+segmenter: "${model}"
+lr: 1.e-4
+optimizer: torch.optim.AdamW
+
+loss:
+  _target_: bioblue.loss.CombineLosses
+  include_background: true
+  ignore_index: ${dataset.void_label}
+  sublossA: 
+    _target_: torch.nn.CrossEntropyLoss
+    ignore_index:  ${dataset.void_label}
+  sublossB: 
+    _target_: bioblue.loss.LogCosHDiceLoss
+    ignore_index:  ${dataset.void_label}
+    softmax: true
+    to_onehot_target: true
+    include_background: true
+  ce_ratio: 0.5
+
+class_weights: [1,20]
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.StepLR
+  step_size: 250
+  gamma: 0.9
+  last_epoch: -1

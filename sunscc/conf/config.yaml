@@ -1,0 +1,16 @@
+defaults:
+  - _self_
+  - trainer: default
+  - model: conf_unet
+  - module: base_segmentation
+  - dataset: synthetic
+  - logger: "mlflow"
+  - server: "${host:}"
+  - exp: test
+  # - override hydra/launcher: gpu
+
+seed: 0
+hydra:
+  job:
+    env_set:
+      DATA_DIR: "${oc.env:HOME}/projects/sunscc/data"

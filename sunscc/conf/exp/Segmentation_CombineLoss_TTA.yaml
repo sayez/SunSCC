@@ -1,0 +1,87 @@
+# @package _global_
+trainer:
+  _target_: pytorch_lightning.Trainer
+  max_epochs: 30
+  gpus: ${gpus}
+  auto_scale_batch_size: false
+  log_every_n_steps: 2
+
+
+logger : []
+
+
+use_dtypes: "???"
+img_side: 512
+
+dataset:
+  _target_: bioblue.dataset.BioblueDataModule
+  data_dir: "/globalscratch/users/n/s/nsayez/deepsun_bioblue/"
+  dataset_name: "All"
+  batch_size: 16
+  num_workers: 12
+
+  # Value of pixels that should not participate to loss  I.E. outside solar disk
+  void_label: -1
+  
+  train_dataset:
+    _target_: bioblue.dataset.DeepsunSegmentationDataset
+    partition: "train"
+    dtypes: ${use_dtypes}
+
+    transforms:
+      - _target_: bioblue.transforms.DeepsunCropNonEmptyMaskIfExists
+        height: 512
+        width: 512
+      - _target_: bioblue.transforms.DeepsunRandomMaskSelector
+      - _target_: bioblue.transforms.DeepsunRandomShiftScaleRotate
+        mask_value: ${dataset.void_label}
+      - _target_: bioblue.transforms.DeepsunRandomFlip
+      - _target_: bioblue.transforms.DeepsunRandomReduceContrast
+        factor_ranges:        [1., .8, .6, .4, .2]
+        factor_probabilities: [.6, .1, .1, .1, .1]
+
+        
+
+  val_dataset:
+    _target_: bioblue.dataset.DeepsunSegmentationDataset
+    partition: "test"
+    dtypes: ${use_dtypes}
+    transforms:
+      - _target_: bioblue.transforms.DeepsunCropNonEmptyMaskIfExists
+        height: 512
+        width: 512
+      - _target_: bioblue.transforms.DeepsunRandomMaskSelector
+      - _target_: bioblue.transforms.DeepsunRandomShiftScaleRotate
+        mask_value: ${dataset.void_label}
+      - _target_: bioblue.transforms.DeepsunRandomFlip
+      - _target_: bioblue.transforms.DeepsunRandomReduceContrast
+        factor_ranges:        [1., .8, .6, .4, .2]
+        factor_probabilities: [.6, .1, .1, .1, .1]
+
+  test_dataset:     
+    _target_: bioblue.dataset.DeepsunSegmentationTTA_TestDataset
+    partition: "test_GT"
+    dtypes: ['image','GroundTruth']
+    patch_side: 512
+    num_tta: 4
+    transforms:
+      - _target_: bioblue.transforms.DeepsunRandomMaskSelector
+      - _target_: bioblue.transforms.DeepsunRandomShiftScaleRotate
+        mask_value: ${dataset.void_label}
+      - _target_: bioblue.transforms.DeepsunReduceContrast_TTA
+        factor_ranges: [1., .8, .6, .4, .2]
+
+
+callbacks:
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    dirpath: "./models"
+    save_last: true
+    monitor: val_meaniou
+    mode: max
+    filename: "{epoch}-{val_meaniou:.2f}"
+  wandb:
+    _target_: bioblue.callback.WandBCallback
+    log_models: false
+  LR_monitor:
+    _target_: "pytorch_lightning.callbacks.LearningRateMonitor"
