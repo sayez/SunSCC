@@ -4,4 +4,4 @@ trainer:
   # fast_dev_run: true
 gpus: "???"
 dataset:
-  data_dir: "${oc.envenv:HOME}/projects/sunscc/data"
+  data_dir: "${oc.envenv:SUNSCC_HOME}/datasets/Segmentation_dataset/"
