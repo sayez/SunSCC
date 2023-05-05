@@ -23,6 +23,4 @@ run_dir=$1
 
 echo "run_dir: $run_dir"
 
-conda activate new-bioblue
-
-srun python /home/ucl/elen/nsayez/bio-blueprints/scripts/TrainP2_P3.py --run_dir $run_dir
+srun python ./sunscc/scripts/TrainP2_P3.py --run_dir $run_dir

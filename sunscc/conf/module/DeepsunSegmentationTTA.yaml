@@ -1,16 +1,16 @@
-_target_: bioblue.module.DeepsunSegmentation_TTA
+_target_: sunscc.module.DeepsunSegmentation_TTA
 segmenter: "${model}"
 lr: 1.e-4
 optimizer: torch.optim.AdamW
 
 loss:
-  _target_: bioblue.loss.CombineLosses
+  _target_: sunscc.loss.CombineLosses
   ignore_index: ${dataset.void_label}
   sublossA: 
     _target_: torch.nn.CrossEntropyLoss
     ignore_index: ${dataset.void_label}
   sublossB: 
-    _target_: bioblue.loss.LogCosHDiceLoss
+    _target_: sunscc.loss.LogCosHDiceLoss
     ignore_index: ${dataset.void_label}
     softmax: true
     to_onehot_target: true

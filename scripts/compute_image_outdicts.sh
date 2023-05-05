@@ -23,10 +23,6 @@
 # command
 export SUBMITIT_EXECUTOR=slurm
 
-
-conda activate new-bioblue
-
-
 input_type=$1
 look_distance=$2
 kernel_bandwidthLon=$3
@@ -40,7 +36,7 @@ echo "hostname: $(hostname)"
 
 echo "num_cpu: $num_cpu input_type: $input_type  look_distance: $look_distance kernel_bandwidthLon: $kernel_bandwidthLon kernel_bandwidthLat: $kernel_bandwidthLat n_iterations: $n_iterations"
 
-python /home/ucl/elen/nsayez/bio-blueprints/notebooks/Classification_generatedataset/compute_image_outdict.py \
+python ../notebooks/Classification_generatedataset/compute_image_outdict.py \
         --input_type $input_type \
          --look_distance $look_distance --kernel_bandwidthLon $kernel_bandwidthLon --kernel_bandwidthLat $kernel_bandwidthLat \
          --n_iterations $n_iterations --num_cpu $num_cpu

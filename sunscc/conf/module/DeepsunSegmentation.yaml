@@ -1,17 +1,17 @@
-_target_: bioblue.module.BaseSegment
+_target_: sunscc.module.BaseSegment
 segmenter: "${model}"
 lr: 1.e-4
 optimizer: torch.optim.AdamW
 
 loss:
-  _target_: bioblue.loss.CombineLosses
+  _target_: sunscc.loss.CombineLosses
   include_background: true
   ignore_index: ${dataset.void_label}
   sublossA: 
     _target_: torch.nn.CrossEntropyLoss
     ignore_index:  ${dataset.void_label}
   sublossB: 
-    _target_: bioblue.loss.LogCosHDiceLoss
+    _target_: sunscc.loss.LogCosHDiceLoss
     ignore_index:  ${dataset.void_label}
     softmax: true
     to_onehot_target: true

@@ -1,8 +1,8 @@
 __version__ = "0.1.0"
 
-from bioblue import dataset, transforms, model, plot
-from bioblue import conf
-from bioblue.utils import git_info
+from sunscc import dataset, transforms, model, plot
+from sunscc import conf
+from sunscc.utils import git_info
 from omegaconf import OmegaConf
 import platform
 

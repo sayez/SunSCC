@@ -1,7 +1,7 @@
-_target_: bioblue.module.BaseSegment
+_target_: sunscc.module.BaseSegment
 segmenter: "${model}"
 # loss:
-#   _target_: bioblue.loss.DiceCELoss
+#   _target_: sunscc.loss.DiceCELoss
 #   include_background: false
 #   to_onehot_y: true
 #   softmax: true

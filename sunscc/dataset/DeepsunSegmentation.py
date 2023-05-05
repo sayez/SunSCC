@@ -1,6 +1,6 @@
 from contextlib import AbstractContextManager
 import zipfile
-from bioblue.dataset.transform.pipelines import Compose
+from sunscc.dataset.transform.pipelines import Compose
 import collections
 from functools import partial
 from torch.utils.data import Dataset

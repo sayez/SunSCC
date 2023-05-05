@@ -1,2 +1,2 @@
-_target_: bioblue.model.Unet
+_target_: sunscc.model.Unet
 bn: false

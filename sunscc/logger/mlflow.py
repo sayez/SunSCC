@@ -1,5 +1,5 @@
 import logging
-from bioblue.callback.mlflow import MLFlowCallback
+from sunscc.callback.mlflow import MLFlowCallback
 from typing import Any, Dict, Optional
 from pytorch_lightning.loggers import MLFlowLogger as BaseLogger
 import mlflow

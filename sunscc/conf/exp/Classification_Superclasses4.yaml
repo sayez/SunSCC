@@ -21,7 +21,7 @@ second_classes: [ 'x','r','sym','asym']
 third_classes: [ "x","o","frag"]
 
 module:
-  _target_: bioblue.module.McIntoshClassifier_Superclasses
+  _target_: sunscc.module.McIntoshClassifier_Superclasses
   classifier: "${model}"
   lr: 1e-4
   optimizer: torch.optim.AdamW
@@ -43,14 +43,14 @@ random_move: false
 random_move_percent: .2
 
 dataset:
-  _target_: bioblue.dataset.BioblueDataModule
+  _target_: sunscc.dataset.SunSCCDataModule
   data_dir: "/globalscratch/users/n/s/nsayez/Classification_dataset/"
   dataset_name: "2002-2019"
   batch_size: 16
   num_workers: 32
   
   train_dataset:
-    _target_: bioblue.dataset.ClassificationDatasetSuperclasses
+    _target_: sunscc.dataset.ClassificationDatasetSuperclasses
     partition: "train"
     dtypes: ${use_dtypes}
     classes: ${use_classes}
@@ -59,20 +59,20 @@ dataset:
     third_classes: ${third_classes}
     json_file: ${use_json}
     transforms:
-      - _target_: bioblue.transforms.DeepsunScaleWhitelight
-      - _target_: bioblue.transforms.DeepsunScaleExcentricityMap
-      - _target_: bioblue.transforms.DeepsunScaleConfidenceMap
-      - _target_: bioblue.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
+      - _target_: sunscc.transforms.DeepsunScaleWhitelight
+      - _target_: sunscc.transforms.DeepsunScaleExcentricityMap
+      - _target_: sunscc.transforms.DeepsunScaleConfidenceMap
+      - _target_: sunscc.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
         standard_height: ${img_side}
         standard_width: ${img_side}
         focus_on_group: ${focus_on_group}
         random_move: ${random_move}
         random_move_percent: ${random_move_percent}
-      - _target_: bioblue.transforms.DeepsunMcIntoshScaleAdditionalInfo
+      - _target_: sunscc.transforms.DeepsunMcIntoshScaleAdditionalInfo
   
 
   val_dataset:
-    _target_: bioblue.dataset.ClassificationDatasetSuperclasses
+    _target_: sunscc.dataset.ClassificationDatasetSuperclasses
     partition: "val"
     dtypes: ${use_dtypes}
     classes: ${use_classes}
@@ -81,19 +81,19 @@ dataset:
     third_classes: ${third_classes}
     json_file: ${use_json}
     transforms:
-      - _target_: bioblue.transforms.DeepsunScaleWhitelight
-      - _target_: bioblue.transforms.DeepsunScaleExcentricityMap
-      - _target_: bioblue.transforms.DeepsunScaleConfidenceMap
-      - _target_: bioblue.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
+      - _target_: sunscc.transforms.DeepsunScaleWhitelight
+      - _target_: sunscc.transforms.DeepsunScaleExcentricityMap
+      - _target_: sunscc.transforms.DeepsunScaleConfidenceMap
+      - _target_: sunscc.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
         standard_height: ${img_side}
         standard_width: ${img_side}
         focus_on_group: ${focus_on_group}
         random_move: ${random_move}
         random_move_percent: ${random_move_percent}
-      - _target_: bioblue.transforms.DeepsunMcIntoshScaleAdditionalInfo
+      - _target_: sunscc.transforms.DeepsunMcIntoshScaleAdditionalInfo
    
   test_dataset:     
-    _target_: bioblue.dataset.ClassificationDatasetSuperclasses
+    _target_: sunscc.dataset.ClassificationDatasetSuperclasses
     partition: "test"
     dtypes: ${use_dtypes}
     classes: ${use_classes}
@@ -102,20 +102,20 @@ dataset:
     third_classes: ${third_classes}
     json_file: ${use_json}
     transforms:
-      - _target_: bioblue.transforms.DeepsunScaleWhitelight
-      - _target_: bioblue.transforms.DeepsunScaleExcentricityMap
-      - _target_: bioblue.transforms.DeepsunScaleConfidenceMap
-      - _target_: bioblue.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
+      - _target_: sunscc.transforms.DeepsunScaleWhitelight
+      - _target_: sunscc.transforms.DeepsunScaleExcentricityMap
+      - _target_: sunscc.transforms.DeepsunScaleConfidenceMap
+      - _target_: sunscc.transforms.DeepsunRotateAndCropAroundGroup_Focus_Move
         standard_height: ${img_side}
         standard_width: ${img_side}
         focus_on_group: ${focus_on_group}
         random_move: ${random_move}
         random_move_percent: ${random_move_percent}
-      - _target_: bioblue.transforms.DeepsunMcIntoshScaleAdditionalInfo
+      - _target_: sunscc.transforms.DeepsunMcIntoshScaleAdditionalInfo
 
 callbacks:
   wandb:
-    _target_: bioblue.callback.WandBCallback
+    _target_: sunscc.callback.WandBCallback
     log_models: false
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
@@ -125,5 +125,5 @@ callbacks:
     mode: max
     filename: "{epoch}-{val_meaniou:.2f}"
   ConfusionMatrix:
-    _target_: 'bioblue.callback.McIntoshClassificationConfusionMatrixCallback'
+    _target_: 'sunscc.callback.McIntoshClassificationConfusionMatrixCallback'
     normalize: 'true'

@@ -1,4 +1,4 @@
-_target_: bioblue.model.LiteHRNet
+_target_: sunscc.model.LiteHRNet
 input_format: ["image"]
 output_format: ["segmentation"]
 classes: [ "penumbra", "umbra"]

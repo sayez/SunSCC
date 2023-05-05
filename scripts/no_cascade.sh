@@ -1,35 +1,5 @@
 #!/bin/bash
 
-############## Parameters
-#######S#B#A#T#C#H --cpus-per-task=40
-
-
-#S#B#A#T#C#H --gres=gpu:TeslaA100_80:1
-
-#SBATCH --gres=gpu:1
-#SBATCH --constraint=TeslaA100_80|TeslaA100
-
-
-# ATTENTION: the SBATCH --jobname is set in the calling script
-# in the job_name variable (argindex 5)
-
-
-#SBATCH --cpus-per-task=16
-#SBATCH --mem-per-cpu=7G
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-
-#SBATCH --open-mode=append
-#SBATCH --output="%x-%j.out"
-
-#SBATCH --partition=gpu
-#SBATCH --time=1800
-
-#S#B#A#T#C#H --exclude=mb-cas001,mb-cas101,mb-mil102
-#SBATCH --exclude=mb-cas001,mb-cas101,mb-mil102
-
-
-###################################
 # getthe arguments
 random_move=$1
 focus_on_group=$2
@@ -79,9 +49,7 @@ echo "random_move: $random_move, focus_on_group: $focus_on_group, use_dtypes: $u
 echo "cascade: $cascade"
 echo "seed: $seed"
 
-
-# srun bioblue exp=Classification_Superclasses_fast gpus=1  \
-bioblue exp=Classification_Superclasses_fast gpus=1  \
+python -m sunscc/train.py  exp=Classification_Superclasses_fast gpus=1  \
             hydra.run.dir=$hydra_out_dir \
             seed=$seed \
             gpus=1 \

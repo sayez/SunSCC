@@ -1,6 +1,6 @@
-_target_: bioblue.model.ConfUnet
+_target_: sunscc.model.ConfUnet
 model_cfg:
-  _target_: bioblue.model.ModelConfig
+  _target_: sunscc.model.ModelConfig
 block: double
 architecture:
   first: 32

@@ -1,4 +1,4 @@
-from bioblue.model.unet import Unet
+from sunscc.model.unet import Unet
 from .conf_unet import ConfUnet
 from .conf_resnet import ConfResNet
 from .McIntosh import *

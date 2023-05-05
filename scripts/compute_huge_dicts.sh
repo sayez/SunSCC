@@ -23,15 +23,6 @@
 # command
 export SUBMITIT_EXECUTOR=slurm
 
-
-conda activate new-bioblue
-
-
-    # parser.add_argument('--look_distance', type=float, default=.1)
-    # parser.add_argument('--kernel_bandwidthLon', type=float, default=.25)
-    # parser.add_argument('--kernel_bandwidthLat', type=float, default=.08)
-    # parser.add_argument('--n_iterations', type=int, default=20)
-
 input_type=$1
 look_distance=$2
 kernel_bandwidthLon=$3
@@ -45,7 +36,7 @@ echo "hostname: $(hostname)"
 
 echo "num_cpu: $num_cpu input_type: $input_type  look_distance: $look_distance kernel_bandwidthLon: $kernel_bandwidthLon kernel_bandwidthLat: $kernel_bandwidthLat n_iterations: $n_iterations"
 
-python /home/ucl/elen/nsayez/bio-blueprints/notebooks/Classification_generatedataset/compute_huge_dict.py \
+python ../notebooks/Classification_generatedataset/compute_huge_dict.py \
         --input_type $input_type \
          --look_distance $look_distance --kernel_bandwidthLon $kernel_bandwidthLon --kernel_bandwidthLat $kernel_bandwidthLat \
          --n_iterations $n_iterations --num_cpu $num_cpu

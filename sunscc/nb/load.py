@@ -1,4 +1,4 @@
-from bioblue.utils.gpu import pick_gpu
+from ..utils.gpu import pick_gpu
 from typing import Any, Dict, Mapping, Optional, Tuple
 from hydra.utils import instantiate
 from hydra import initialize_config_module as init_hydra, compose, initialize_config_dir
@@ -11,7 +11,7 @@ import pytorch_lightning as pl
 from tempfile import TemporaryDirectory
 from importlib import import_module
 from pytorch_lightning import LightningModule
-from bioblue import module
+from ...sunscc import module
 from omegaconf import OmegaConf
 from pathlib import Path
 
@@ -58,7 +58,7 @@ def load_from_dir(run_path, model_path=None, load_trainer=False, override=None):
     cfg = OmegaConf.load(config_path)
     if override is not None:
 
-        with init_hydra(config_module="bioblue.conf"):
+        with init_hydra(config_module="sunscc.conf"):
             cfg2 = compose(
                 config_name="config", overrides=override, return_hydra_config=True
             )
@@ -148,7 +148,7 @@ def load_from_dir2(run_path, model_path=None, load_trainer=False, override=None)
 
 
 def load_from_overrides(overrides=[], load_trainer=False) -> Tuple:
-    with init_hydra(config_module="bioblue.conf"):
+    with init_hydra(config_module="sunscc.conf"):
         cfg = compose(
             config_name="config", overrides=overrides, return_hydra_config=True
         )
@@ -180,7 +180,7 @@ def load_from_overrides(overrides=[], load_trainer=False) -> Tuple:
 
 def load_from_overrides_and_modelpath (overrides=[], model_path=None , load_trainer=False) -> Tuple:
     # cfg = OmegaConf.create()
-    with init_hydra(config_module="bioblue.conf"):
+    with init_hydra(config_module="sunscc.conf"):
         cfg = compose(
             config_name="config", overrides=overrides, return_hydra_config=True
         )

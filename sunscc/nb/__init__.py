@@ -31,9 +31,9 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 from torchmetrics.utilities.data import to_categorical, to_onehot
 
-import bioblue as bb
-import bioblue.plot.cm as cm
+import sunscc as bb
+import sunscc.plot.cm as cm
 
-from bioblue.nb.image_display import MultiImageDisplay, myshow, myshow3d
-from bioblue.nb.load import load_from_cfg, load_from_runid, load_from_overrides, load_from_overrides_and_modelpath
+from sunscc.nb.image_display import MultiImageDisplay, myshow, myshow3d
+from sunscc.nb.load import load_from_cfg, load_from_runid, load_from_overrides, load_from_overrides_and_modelpath
 

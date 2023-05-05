@@ -4,14 +4,12 @@ function join_by { local IFS="$1"; shift; echo "$*"; }
 
 num_workers=16
 
-# multi_thresh=(['image','2023_T425_fgbg','2023_T375_fgbg','2023_T325_fgbg'] )
 multi_thresh=(['image','2023_T425_fgbg','2023_T375_fgbg','2023_T325_fgbg'] )
 max_epochs=40
 project_name="2023_MultipleThresholds_fgbg_correct"
-# project_name="2023_Deepsun"
 
-# run_numbers=(0 2 3 4 5 6 7 8 9 10)
-run_numbers=(8)
+
+run_numbers=(0 2 3 4 5 6 7 8 9 10)
 
 scheduler_type='StepLR' # StepLR or MultistepLR or None
 scheduler_interval='epoch' # used for MultistepLR scheduler and StepLR scheduler
@@ -51,7 +49,7 @@ for run_number in ${run_numbers[@]}; do
 
 
         echo "sbatch Segmentation_slurm_launcher.sh workers=$num_workers classes=$classes use_dtype=$use_dtype num_epochs=$max_epochs project_name=$project_name job_name=$job_name, scheduler_type=$scheduler_type scheduler_interval=$scheduler_interval, scheduler_step_size=$scheduler_step_size"
-        sbatch ./bio-blueprints/scripts/Segmentation_slurm_launcher.sh $num_workers $use_dtype $max_epochs $project_name $job_name $scheduler_type $scheduler_interval $scheduler_step_size $run_number $classes
+        sbatch ./sunscc/scripts/Segmentation_slurm_launcher.sh $num_workers $use_dtype $max_epochs $project_name $job_name $scheduler_type $scheduler_interval $scheduler_step_size $run_number $classes
     done
 done
 

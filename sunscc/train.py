@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
 from typing import Mapping
-from bioblue.utils.gpu import pick_gpu
+from sunscc.utils.gpu import pick_gpu
 import mlflow
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import torch
-import bioblue.conf
-from bioblue.utils import pick_gpu
+import sunscc.conf
+from sunscc.utils import pick_gpu
 from hydra.utils import call, instantiate
 from hydra.core.config_store import ConfigStore
 import pytorch_lightning as pl

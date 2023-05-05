@@ -62,7 +62,7 @@ for use_dtype in ${all_single_thresh[@]}; do
 
 
     echo "sbatch Segmentation_slurm_launcher.sh workers=$num_workers classes=$classes use_dtype=$use_dtype num_epochs=$max_epochs project_name=$project_name job_name=$job_name, scheduler_type=$scheduler_type scheduler_interval=$scheduler_interval, scheduler_step_size=$scheduler_step_size"
-    sbatch ./bio-blueprints/scripts/Segmentation_slurm_launcher.sh $num_workers $use_dtype $max_epochs $project_name $job_name $scheduler_type $scheduler_interval $scheduler_step_size $run_number $classes
+    sbatch ./sunscc/scripts/Segmentation_slurm_launcher.sh $num_workers $use_dtype $max_epochs $project_name $job_name $scheduler_type $scheduler_interval $scheduler_step_size $run_number $classes
 done
 
 

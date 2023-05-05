@@ -1,5 +1,5 @@
 from numpy.lib.function_base import interp
-from bioblue.dataset.transform.pipelines import Compose
+from sunscc.dataset.transform.pipelines import Compose
 import collections
 import zipfile
 from functools import partial
@@ -216,88 +216,6 @@ class NumpyDataset(Dataset):
             dtype: self.files[dtype][self.files[dtype].files[index]]
             for dtype in self.dtypes
         }
-
-
-def preprocess(
-    dataset_name,
-    sample_dirs,
-    prefix="_",
-    resize=(512, 512),
-    crop=None,
-    stride=None,
-    partition="train",
-    split=1,
-    output_name=None,
-    file_suffix=".bmp",
-    seg_suffix=".bmp",
-):
-    output_dir = Path("/home/vjoosdeterbe/projects/bio-blueprints/data/")
-    output_name = dataset_name if output_name is None else output_name
-    datasets_dir = Path("~/projects/bb-data").expanduser()
-    dataset_dir = datasets_dir / dataset_name
-    for name, (img_dir, seg_dir) in sample_dirs.items():
-        print(name)
-        log.info(f"processing {name}.")
-        img_files = list(sorted((dataset_dir / img_dir).iterdir()))
-        img_files = [f for f in img_files if f.suffix == file_suffix]
-        # test_img = cv2.imread(str(img_files[0]), cv2.IMREAD_GRAYSCALE)
-        # original_shape = test_img.shape
-        # test_img = view_as_windows(test_img, crop, step=stride)
-        split_img_files = np.array_split(img_files, split)
-        start = 0
-        out_img_dir = output_dir / output_name / partition / "image"
-        out_img_dir.mkdir(parents=True, exist_ok=True)
-        if seg_dir is not None:
-            out_seg_dir = output_dir / output_name / partition / "segmentation"
-            out_seg_dir.mkdir(parents=True, exist_ok=True)
-        for img_files in split_img_files:
-            img_filename = out_img_dir / f"{name}_{start}-{start+len(img_files)-1}.npz"
-            img_zipf = zipfile.ZipFile(
-                img_filename,
-                mode="w",
-                compression=zipfile.ZIP_DEFLATED,
-                allowZip64=True,
-            )
-            if seg_dir is not None:
-                seg_filename = (
-                    out_seg_dir / f"{name}_{start}-{start+len(img_files)-1}.npz"
-                )
-                seg_zipf = zipfile.ZipFile(
-                    seg_filename,
-                    mode="w",
-                    compression=zipfile.ZIP_DEFLATED,
-                    allowZip64=True,
-                )
-            start += len(img_files)
-            for i, img_file in enumerate(tqdm(img_files)):
-                suffix = img_file.stem.rsplit(prefix, 1)[1]
-                image = cv2.imread(str(img_file), cv2.IMREAD_GRAYSCALE)
-                image = image.astype(np.uint8)
-                if resize:
-                    image = cv2.resize(image, resize, interpolation=cv2.INTER_CUBIC)
-                with img_zipf.open(f"arr_{i}.npy", "w", force_zip64=True) as fid:
-                    np.lib.format.write_array(fid, image)
-
-                if seg_dir is not None:
-                    seg_files = list(
-                        (dataset_dir / seg_dir).glob(f"*{suffix}{seg_suffix}")
-                    )
-                    print(dataset_dir / seg_dir, suffix)
-                    assert len(seg_files) <= 1
-                    if len(seg_files) != 1:
-                        continue
-                    seg_file = seg_files[0]
-                    print(seg_file)
-                    seg = cv2.imread(str(seg_file), cv2.IMREAD_GRAYSCALE)
-                    if resize:
-                        seg = cv2.resize(seg, resize, interpolation=cv2.INTER_NEAREST)
-                    if np.max(seg) == 255:
-                        seg[seg == np.max(seg)] = 1
-                    with seg_zipf.open(f"arr_{i}.npy", "w", force_zip64=True) as fid:
-                        np.lib.format.write_array(fid, seg)
-            img_zipf.close()
-            if seg_dir is not None:
-                seg_zipf.close()
 
 def create_circular_mask(h, w, center=None, radius=None):
 

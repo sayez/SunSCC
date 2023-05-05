@@ -1,5 +1,5 @@
 from typing import Dict, List
-from bioblue.dataset.numpy import NpzWriter
+from sunscc.dataset.numpy import NpzWriter
 from pathlib import Path
 import zipfile
 import SimpleITK as sitk

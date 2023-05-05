@@ -10,7 +10,7 @@ from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
 import torchvision.transforms as T
 
-from bioblue.model.TransUNet import *
+from sunscc.model.TransUNet import *
 
 import matplotlib.pyplot as plt
 

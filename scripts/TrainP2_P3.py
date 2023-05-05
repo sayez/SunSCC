@@ -1,7 +1,7 @@
-from bioblue.transforms import *
+from sunscc.transforms import *
 from pathlib import Path
 
-import bioblue
+import sunscc
 import pytorch_lightning as pl
 import torch
 import numpy as np
@@ -21,7 +21,7 @@ from tqdm.notebook import tqdm
 import wandb
 
 
-from bioblue.nb.load import load_from_dir, load_from_dir2, load_from_cfg
+from sunscc.nb.load import load_from_dir, load_from_dir2, load_from_cfg
 
 import argparse
 
@@ -83,7 +83,7 @@ def main(args):
     if isinstance(conf2.callbacks, Mapping):
         conf2.callbacks = [cb for cb in conf2.callbacks.values()]
     for callback in conf2.callbacks:
-        if callback['_target_'] == 'bioblue.callback.WandBCallback':
+        if callback['_target_'] == 'sunscc.callback.WandBCallback':
             print(type(callback))
     #         callback['cfg'] = conf2
             with open_dict(callback):
@@ -153,7 +153,7 @@ def main(args):
     if isinstance(conf3.callbacks, Mapping):
         conf3.callbacks = [cb for cb in conf3.callbacks.values()]
     for callback in conf3.callbacks:
-        if callback['_target_'] == 'bioblue.callback.WandBCallback':
+        if callback['_target_'] == 'sunscc.callback.WandBCallback':
             print(type(callback))
     #         callback['cfg'] = conf3
             with open_dict(callback):

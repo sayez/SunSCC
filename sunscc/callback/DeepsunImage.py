@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 import cv2
 from torchmetrics.utilities.data import to_categorical
-from bioblue.plot import cm
+from sunscc.plot import cm
 import numpy as np
 from tqdm.auto import tqdm
 import os

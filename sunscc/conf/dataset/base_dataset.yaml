@@ -1,2 +1,2 @@
-_target_: bioblue.dataset.BioblueDataModule
+_target_: sunscc.dataset.SunSCCDataModule
 test_dataset: ${dataset.val_dataset}

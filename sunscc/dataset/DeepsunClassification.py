@@ -2,7 +2,7 @@
 
 from email.mime import base
 from tokenize import group
-from bioblue.dataset.transform.pipelines import Compose
+from sunscc.dataset.transform.pipelines import Compose
 import collections
 from functools import partial
 

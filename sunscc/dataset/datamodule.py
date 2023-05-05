@@ -4,13 +4,13 @@ from typing import Dict, List, Optional, Type, Union
 from numpy.lib.arraysetops import isin
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from bioblue.dataset import PrepareStrategy, SetupStrategy
+from sunscc.dataset import PrepareStrategy, SetupStrategy
 from hydra.utils import instantiate
 
 log = logging.getLogger(__name__)
 
 
-class BioblueDataModule(pl.LightningDataModule):
+class SunSCCDataModule(pl.LightningDataModule):
     def __init__(
         self,
         data_dir: Path,

@@ -44,11 +44,11 @@ class DeepsunSegmentation_TTA(pl.LightningModule):
         # hack for loss
         from omegaconf import OmegaConf
 
-        loss = OmegaConf.create({"_target_": "bioblue.loss.CombineLosses",
+        loss = OmegaConf.create({"_target_": "sunscc.loss.CombineLosses",
                               "ignore_index": -1,
                               "sublossA":{ "_target_": "torch.nn.CrossEntropyLoss",
                                             "ignore_index": -1},
-                              "sublossB":{ "_target_": "bioblue.loss.LogCosHDiceLoss",
+                              "sublossB":{ "_target_": "sunscc.loss.LogCosHDiceLoss",
                                             "ignore_index": -1,
                                             "softmax": True,
                                             "to_onehot_target": True,
@@ -60,9 +60,9 @@ class DeepsunSegmentation_TTA(pl.LightningModule):
         if hasattr(loss, "_target_"):
             print(loss["_target_"])
             if (loss["_target_"] == "segmentation_models_pytorch.losses.dice.DiceLoss") or (
-                loss["_target_"] == "bioblue.loss.GeneralizedDiceLoss" ) or (
+                loss["_target_"] == "sunscc.loss.GeneralizedDiceLoss" ) or (
                 loss["_target_"] == "monai.losses.DiceLoss"   ) or (
-                loss["_target_"] == "bioblue.loss.GDiceLoss"   
+                loss["_target_"] == "sunscc.loss.GDiceLoss"   
                 ):
                 self.loss = instantiate(loss)
             else:

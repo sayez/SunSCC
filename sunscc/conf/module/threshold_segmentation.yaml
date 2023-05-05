@@ -1,2 +1,2 @@
-_target_: bioblue.module.ThresholdSegment
+_target_: sunscc.module.ThresholdSegment
 segmenter: "${model}"

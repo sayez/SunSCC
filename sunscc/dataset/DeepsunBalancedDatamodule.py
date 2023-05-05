@@ -4,14 +4,14 @@ from typing import Dict, List, Optional, Type, Union
 from numpy.lib.arraysetops import isin
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from bioblue.dataset import PrepareStrategy, SetupStrategy
+from sunscc.dataset import PrepareStrategy, SetupStrategy
 from hydra.utils import instantiate
 
 from torch.utils.data.sampler import WeightedRandomSampler
 from tqdm.notebook import tqdm
 import time
 
-from .datamodule import BioblueDataModule
+from .datamodule import SunSCCDataModule
 
 log = logging.getLogger(__name__)
 

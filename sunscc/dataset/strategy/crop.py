@@ -1,9 +1,9 @@
-from bioblue.dataset.numpy import NpzWriter
+from sunscc.dataset.numpy import NpzWriter
 from pathlib import Path
 
 import numpy as np
 from . import PrepareStrategy
-from bioblue import fibers
+from sunscc import fibers
 import logging
 
 log = logging.getLogger(__name__)

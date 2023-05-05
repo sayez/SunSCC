@@ -1,4 +1,4 @@
-_target_: bioblue.model.McIntoshClassifier_MobilenetEncoder
+_target_: sunscc.model.McIntoshClassifier_MobilenetEncoder
 
 input_format: 
     visual: ["image", "mask","mask_one_hot", "mask_LargestSpot", "group_mask", "group_mask_LargestSpot"]

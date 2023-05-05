@@ -38,9 +38,9 @@ class BaseSegment(pl.LightningModule):
         if hasattr(loss, "_target_"):
             print(loss["_target_"])
             if (loss["_target_"] == "segmentation_models_pytorch.losses.dice.DiceLoss") or (
-                loss["_target_"] == "bioblue.loss.GeneralizedDiceLoss" ) or (
+                loss["_target_"] == "sunscc.loss.GeneralizedDiceLoss" ) or (
                 loss["_target_"] == "monai.losses.DiceLoss"   ) or (
-                loss["_target_"] == "bioblue.loss.GDiceLoss"   
+                loss["_target_"] == "sunscc.loss.GDiceLoss"   
                 ):
                 self.loss = instantiate(loss)
             else:
