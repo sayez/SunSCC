@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 from . import PrepareStrategy
-from sunscc import fibers
 import logging
 
 log = logging.getLogger(__name__)
