@@ -8,6 +8,12 @@ data/
 artifacts/
 tmp/
 notebooks/images/
+datasets/
+!datasets/__init__.py
+models/
+!models/__init__.py
+outputs/
+
 
 # Additions
 notebooks/*.png
