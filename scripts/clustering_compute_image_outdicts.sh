@@ -36,7 +36,7 @@ echo "hostname: $(hostname)"
 
 echo "num_cpu: $num_cpu input_type: $input_type  look_distance: $look_distance kernel_bandwidthLon: $kernel_bandwidthLon kernel_bandwidthLat: $kernel_bandwidthLat n_iterations: $n_iterations"
 
-python ../notebooks/Classification_generatedataset/compute_image_outdict.py \
+python ./utilities/compute_image_outdict.py \
         --input_type $input_type \
          --look_distance $look_distance --kernel_bandwidthLon $kernel_bandwidthLon --kernel_bandwidthLat $kernel_bandwidthLat \
          --n_iterations $n_iterations --num_cpu $num_cpu

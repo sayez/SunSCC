@@ -5,6 +5,7 @@ import json
 from copy import deepcopy
 
 import clustering_utilities as c_utils
+import matching_utilities as m_utils
 
 import concurrent.futures
 from itertools import repeat
@@ -25,18 +26,12 @@ def get_time_string():
 
 def main(args):
     # get current time
-
-
-    # wl_dir = "/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019/all"  
-    wl_dir = "/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2/all"  
+    wl_dir = "./datasets/classification/all"  
     wl_list = sorted(glob.glob(os.path.join(wl_dir, '**/*.FTS'),recursive=True))
     wl_basenames = [ os.path.basename(wl) for wl in wl_list ]
 
-    # masks_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019/feb2023/T425-T375-T325_fgbg'
-    masks_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2/T425-T375-T325_fgbg'
+    masks_dir = './datasets/classification/T425-T375-T325_fgbg'
 
-    sqlite_db_path = "/globalscratch/users/n/s/nsayez/Classification_dataset/drawings_sqlite.sqlite"
-    database = sqlite_db_path
     print( get_time_string(), f'num images in directory: {len(wl_list)}', )
 
     rotten_list = [
@@ -59,9 +54,7 @@ def main(args):
         
     ]
     
-
-    # root_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019/feb2023'
-    root_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2'
+    root_dir = './datasets/classification'
     tmp = root_dir+'/wl_list2dbGroups_Classification.json'
 
     print(f'{get_time_string()}  opening huge db dict')
@@ -82,8 +75,6 @@ def main(args):
     kernel_bandwidthLon = args.kernel_bandwidthLon  # Longitude Kernel parameter.
     kernel_bandwidthLat = args.kernel_bandwidthLat  # Latitude Kernel parameter.
     n_iterations = args.n_iterations # Number of iterations
-
-
 
     cur_huge_dict = { } 
 
@@ -108,8 +99,7 @@ def main(args):
                 cur_huge_dict[result_key] = deepcopy(result_dict)
     print(f'{get_time_string()}  DONE multiprocessing')   
 
-    # output_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019/feb2023/param_optimization'
-    output_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2/param_optimization'
+    output_dir = './datasets/classification/param_optimization'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     output_filename = f'cur_dict_2002-19_dist{look_distance}_Lon{kernel_bandwidthLon}_lat{kernel_bandwidthLat}_iter{n_iterations}.json'

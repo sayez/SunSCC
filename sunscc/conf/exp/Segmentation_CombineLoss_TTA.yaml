@@ -5,6 +5,12 @@ trainer:
   gpus: ${gpus}
   auto_scale_batch_size: false
   log_every_n_steps: 2
+  
+  # # For test purpose only (uncomment to test on a small subset)
+  # limit_train_batches: 1
+  # limit_val_batches: 1
+  # limit_test_batches: 1
+  # limit_predict_batches: 1
 
 
 logger : []
@@ -15,7 +21,8 @@ img_side: 512
 
 dataset:
   _target_: sunscc.dataset.SunSCCDataModule
-  data_dir: "/globalscratch/users/n/s/nsayez/deepsun_sunscc
+  # data_dir: "./datasets/segmentation"
+  data_dir: "${oc.env:SUNSCCDATASET_PATH}/datasets/segmentation"
   dataset_name: "All"
   batch_size: 16
   num_workers: 12

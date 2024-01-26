@@ -34,8 +34,7 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
                 tune_fc_only=True
                 ):
         super().__init__()
-
-        super().__init__()
+        
         self.save_hyperparameters(logger=False)
 
         self.scheduler_interval = scheduler_interval

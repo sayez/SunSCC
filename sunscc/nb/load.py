@@ -11,7 +11,7 @@ import pytorch_lightning as pl
 from tempfile import TemporaryDirectory
 from importlib import import_module
 from pytorch_lightning import LightningModule
-from ...sunscc import module
+from sunscc import module
 from omegaconf import OmegaConf
 from pathlib import Path
 

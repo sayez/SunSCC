@@ -53,6 +53,7 @@ class DeepsunSegmentationDataset(Dataset):
             transforms = Compose(transforms_init)
 
         self.transforms = transforms
+        print(os.getcwd())
         self.root_dir = Path(root_dir) / partition
         self.dtypes = dtypes
 

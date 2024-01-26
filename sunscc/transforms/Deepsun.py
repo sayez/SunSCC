@@ -29,6 +29,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 from skimage.measure import label, regionprops
+import skimage.exposure
+from numpy.random import default_rng
 
 import time
 
@@ -1636,6 +1638,325 @@ class DeepsunRotateAndCropAroundGroup_Focus_Move(DualTransform):
         
         
         return kwargs
+
+
+class DeepsunClassifHideOtherGroups(DualTransform):
+    def __init__(self, always_apply=False, p=1.0, method='avg'):
+        super().__init__(self, p=p)
+        self.index = 0
+        self.method = method
+
+    def __call__(self, *args, force_apply=False, **kwargs):
+        # st = time.time()
+        img = kwargs['image'].copy()
+        msk = kwargs['mask'].copy()
+        grp_msk = kwargs['group_mask'].copy()
+        disk = kwargs['solar_disk'].copy()
+        excentricity = kwargs['excentricity_map'].copy()
+        confidence = kwargs['confidence_map'].copy()
+        grp_confidence = kwargs['group_confidence_map'].copy()
+
+        # get the pixels that are in the solar disk and zero in the msk
+        bg = (disk>0) & (msk == 0)
+
+
+        # get the average value of the pixels in bg
+        bg_avg = np.mean(img[bg])
+        
+        # get the non-zero pixels in confidence that are zero in group confidence
+        # these are the pixels that belong to the group we are hiding
+        # and are not part of the group we are classifying
+        hide_mask = (confidence > 0) & (grp_confidence == 0)
+        h_m = hide_mask.copy().astype(np.uint8)
+        
+        
+        # make a dilation of the hide_mask to make sure the border is covered
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9,9))
+        h_m2 = cv2.morphologyEx(h_m, cv2.MORPH_DILATE, kernel)
+        hide_mask = h_m2 > 0
+
+
+        if self.method == 'avg':
+            # set the pixels in hide_mask to the average value of the background
+            new_img = img.copy()
+            new_img[hide_mask] = bg_avg
+            
+        elif self.method == 'local_avg':
+            # for each shape in the hide_mask, get the average value of pixels around it
+            # and set the pixels in the shape to that value
+            new_img = img.copy()
+
+            # get the connected components in the hide_mask using skimage.measure.label
+            # this will give us a label for each shape in the hide_mask
+            # and a background label of 0
+            labels = skimage.measure.label(hide_mask, background=0)
+            for i in range(1,labels.max()+1):
+                # get the pixels in the shape
+                shape_mask = labels == i
+
+                # do a dilation of the shape mask to get the pixels around the shape
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+                dilated_shape_mask = cv2.morphologyEx(shape_mask.astype(np.uint8), cv2.MORPH_DILATE, kernel)
+
+                # get the pixels that are in the dilated shape mask but not in the shape mask
+                # these are the pixels around the shape
+                around_shape_mask = (dilated_shape_mask & (~shape_mask)).astype(np.uint8)
+
+                # get the average value of the pixels around the shape
+                around_shape_avg = np.mean(new_img[around_shape_mask != 0])
+
+                # set the pixels in the shape to the average value of the pixels around the shape
+                new_img[shape_mask] = around_shape_avg
+                
+        
+        kwargs['image'] = new_img
+        
+        return kwargs
+    
+
+
+from skimage.segmentation import clear_border
+from matplotlib import patches
+from shapely.geometry import Polygon
+
+
+class DeepsunAddRandomPatch(DualTransform):
+    def __init__(self, always_apply=False, p=1.0, method='avg'):
+        super().__init__(self, p=p)
+        self.index = 0
+        self.method = method
+
+    def gen_mask(self, shape):
+        # read input image
+        img = np.zeros(shape, np.uint8)
+        height, width = img.shape[:2]
+
+        # define random seed to change the pattern
+        rng = default_rng()
+
+        # create random noise image
+        noise = rng.integers(0, 255, (height,width), np.uint8, True)
+
+        # blur the noise image to control the size
+        blur = cv2.GaussianBlur(noise, (0,0), sigmaX=5, sigmaY=5, borderType = cv2.BORDER_DEFAULT)
+
+        # stretch the blurred image to full dynamic range
+        stretch = skimage.exposure.rescale_intensity(blur, in_range='image', out_range=(0,255)).astype(np.uint8)
+
+        # threshold stretched image to control the size
+        thresh = cv2.threshold(stretch, 175, 255, cv2.THRESH_BINARY)[1]
+
+        # # apply morphology open and close to smooth out and make 3 channels
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9,9))
+        mask = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        # mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+        # mask = thresh
+
+        mask = cv2.merge([mask,mask,mask])
+
+        return mask.copy()
+    
+    # from a mask with several connected components, get the bbox of the non-zero pixels
+    # get the xmin, ymin, xmax, ymax of the non-zero pixels
+    def mask_to_bbox(self, mask):
+        # get the connected components
+        labels = label(mask)
+        # get the properties of the connected components
+        regions = regionprops(labels)
+
+        xmin, ymin = mask.shape[0], mask.shape[1]
+        xmax, ymax = 0, 0       
+        for r in regions:
+            if r.bbox[0] < xmin:
+                xmin = r.bbox[0]
+            if r.bbox[1] < ymin:
+                ymin = r.bbox[1]
+            if r.bbox[2] > xmax:
+                xmax = r.bbox[2]
+            if r.bbox[3] > ymax:
+                ymax = r.bbox[3]
+
+        return xmin, ymin, xmax, ymax
+    
+    def generate_bbox(self, mask, disk_mask , Lon, Lat, radius):
+        # given a binary mask, generate a bounding box that does not intersect the bbox of the non-zero pixels,
+        # the bbox is not bound to the image size
+        # Lon, Lat: the center of the bbox in radians,
+        # mask: binary mask
+        # return: bbox
+
+        # get the bbox of the non-zero pixels (several connected components), this is the bbox that the generated bbox should not intersect
+        # get the xmin, ymin, xmax, ymax of the non-zero pixels
+        xmin, ymin, xmax, ymax = self.mask_to_bbox(mask)
+        # create a polygon of the bbox of the non-zero pixels
+        bbox_mask = (xmin, ymin, xmax, ymax)
+        bbox_mask_poly = Polygon([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin)])
+
+        # bbox size are the denominator of a circle radius
+        bbox_sizes  = [4, 6, 9, 30]
+        sample_bbox_size = radius / np.random.choice(bbox_sizes)
+        bbox_w = sample_bbox_size * np.abs(np.cos(Lon))
+        bbox_h = sample_bbox_size * np.abs(np.cos(Lat))
+        
+        # get list of all non-zero coordinates in disk_mask
+        # get the coordinates of the non-zero pixels
+        disk_mask_coords = np.argwhere(disk_mask > 0 )
+
+        if disk_mask_coords.shape[0] == 0:
+            # if there is no non-zero pixels in the disk mask, return None
+            return None, None
+
+
+        # check if the bbox intersects the bbox of the non-zero pixels
+        # if it does, generate a new bbox location
+        # if it does not, return the bbox
+        bbox = [0, 0, 0, 0]  
+        trials = 0
+        while True:
+            if trials > 20:
+                break
+            else:
+                trials +=1
+
+            # select a random pixel from the disk mask
+            index = np.random.randint(0, disk_mask_coords.shape[0])
+            bbox_x = disk_mask_coords[index][1]
+            bbox_y = disk_mask_coords[index][0]
+
+            # generate a bbox
+            bbox = [ bbox_y -( bbox_h / 2),bbox_x - (bbox_w / 2),  bbox_y + (bbox_h / 2),bbox_x + (bbox_w / 2),]
+
+            #check if the bbox intersects the bbox of the non-zero pixels without using shapely
+            if bbox[0] > bbox_mask[2] or bbox[1] > bbox_mask[3] or bbox[2] < bbox_mask[0] or bbox[3] < bbox_mask[1]:
+                break
+        
+
+        if trials > 20:
+            return None, None
+
+        return bbox, bbox_mask
+    
+    def modify(self, mask, gen_mask, bbox):
+      
+        tmp = mask.copy()
+        tmp[tmp>0] = 0
+
+        source_height, source_width = gen_mask.shape[:2]
+        height , width = mask.shape[:2]
+
+        # bbox has format (ymin, xmin, ymax, xmax)
+        # Extract the coordinates from the bounding box
+        y1, x1, y2, x2 = bbox
+
+        # Calculate the target index ranges
+        target_y_start = y1
+        target_y_end = y1 + source_height
+        target_x_start = x1
+        target_x_end = x1 + source_width
+
+        # Ensure the target index ranges are within the bounds of the target image
+        target_y_start = max(0, target_y_start)
+        target_y_end = min(height, target_y_end)
+        target_x_start = max(0, target_x_start)
+        target_x_end = min(width, target_x_end)
+
+        # Calculate the source index ranges
+        source_y_start = target_y_start - y1
+        source_y_end = source_y_start + (target_y_end - target_y_start)
+        source_x_start = target_x_start - x1
+        source_x_end = source_x_start + (target_x_end - target_x_start)
+
+        # Assign the source image pixels to the target image using index ranges
+        tmp[target_y_start:target_y_end, target_x_start:target_x_end] = \
+            gen_mask[source_y_start:source_y_end, source_x_start:source_x_end]
+        
+        return tmp
+        
+
+
+    def __call__(self, *args, force_apply=False, **kwargs):
+            #take a random number between 0 and 1, 
+            # if it is less than the probability, then apply the transform
+            if random.random() > self.p:
+                return kwargs
+            
+            # generate an image with same shape as the input image
+            img = kwargs['image'].copy()
+            msk = kwargs['confidence_map'].copy()
+            disk = kwargs['solar_disk'].copy() 
+            
+            ######################
+            # do a dilation of the mask to be sure the added group is not too close
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20,20))
+            msk_dilate = cv2.morphologyEx((msk>0).astype(np.uint8), cv2.MORPH_DILATE, kernel)
+            
+            xmin, ymin, xmax, ymax = self.mask_to_bbox(msk_dilate)
+            bbox_mask = (xmin, ymin, xmax, ymax)
+            bbox_mask = [int(i) for i in bbox_mask]
+            
+            bbox, bbox_mask = self.generate_bbox(msk_dilate, disk, 3.4, .79, radius=450)
+            if bbox is None:
+                # No group location could be found, abort transform
+                return kwargs
+            
+            bbox = [int(i) for i in bbox]
+            bbox_shape = [bbox[2] - bbox[0], bbox[3] - bbox[1]]
+            
+            gen_m = self.gen_mask(bbox_shape)
+            # remove connected components touching the border
+            gen_m = gen_m[:,:,0]//255                 
+            
+            gen_m_1 = self.modify(msk, gen_m, bbox)
+            gen_m_1 = gen_m_1 * disk
+           
+            
+            ######################
+            
+  
+            bg = (disk>0) & (msk == 0)
+            # get the average value of the pixels in bg
+            bg_avg = np.mean(img[bg])
+
+            if self.method == 'avg':
+                # set the pixels in hide_mask to the average value of the background
+                new_img = img.copy()
+                new_img[gen_m] = bg_avg
+                
+            elif self.method == 'local_avg':
+                # for each shape in the hide_mask, get the average value of pixels around it
+                # and set the pixels in the shape to that value
+                new_img = img.copy()
+
+                # get the connected components in the hide_mask using skimage.measure.label
+                # this will give us a label for each shape in the hide_mask
+                # and a background label of 0
+                labels = skimage.measure.label(gen_m_1, background=0)
+                for i in range(1,labels.max()+1):
+                    # get the pixels in the shape
+                    shape_mask = labels == i
+
+                    # do a dilation of the shape mask to get the pixels around the shape
+                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+                    dilated_shape_mask = cv2.morphologyEx(shape_mask.astype(np.uint8), cv2.MORPH_DILATE, kernel)
+
+                    # get the pixels that are in the dilated shape mask but not in the shape mask
+                    # these are the pixels around the shape
+                    around_shape_mask = (dilated_shape_mask & (~shape_mask)).astype(np.uint8)
+
+                    # get the average value of the pixels around the shape
+                    around_shape_avg = np.mean(new_img[around_shape_mask != 0])
+
+                    # set the pixels in the shape to the average value of the pixels around the shape
+                    new_img[shape_mask] = around_shape_avg   
+    
+            
+            kwargs['image'] = new_img
+            
+            return kwargs
+    
+
+
 
 
 from mpl_toolkits.axes_grid1.axes_rgb import make_rgb_axes, RGBAxes

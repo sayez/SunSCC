@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typing import Mapping
 from sunscc.utils.gpu import pick_gpu
-import mlflow
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import torch

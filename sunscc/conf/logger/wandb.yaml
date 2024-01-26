@@ -1,9 +1,9 @@
 # @package _global_
 logger:
   - _target_: pytorch_lightning.loggers.WandbLogger
-      name: "sunscc_run"
-      project: 'SunSCC'
-      offline: false
-      save_dir: "."
-      resume: 'allow'
+    name: "sunscc_run"
+    project: 'SunSCC'
+    offline: false
+    save_dir: "."
+    resume: 'allow'
 exp: "???"

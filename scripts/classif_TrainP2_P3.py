@@ -1,7 +1,14 @@
+import os
+import sys
+# Get the absolute path of the repository's root directory
+module_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Add the root directory to the Python path
+sys.path.append(module_dir)
+
 from sunscc.transforms import *
+
 from pathlib import Path
 
-import sunscc
 import pytorch_lightning as pl
 import torch
 import numpy as np
@@ -9,7 +16,6 @@ import matplotlib.pyplot as plt
 # %matplotlib inline
 # %matplotlib ipympl
 import ipywidgets as widget
-import os
 from omegaconf import DictConfig, OmegaConf, open_dict
 from hydra.utils import instantiate
 
@@ -20,10 +26,11 @@ from typing import Mapping
 from tqdm.notebook import tqdm
 import wandb
 
-
 from sunscc.nb.load import load_from_dir, load_from_dir2, load_from_cfg
 
 import argparse
+
+from copy import deepcopy
 
 
 def main(args):
@@ -42,12 +49,7 @@ def main(args):
     print(trained_parts_str)
 
     all_overrides = {
-                #   "scheduler":{"_target_": "torch.optim.lr_scheduler.MultiStepLR",
-                #                "milestones": [2, 15 , 25],
-                #                 "gamma": 0.1},
-                #   "scheduler_interval": 'epoch',
-                #   "wandb":{"project":"McIntosh_Fast_Cascade_DataAugFlipRotate_SplitTraining"}
-                  "wandb":{"project":"McIntosh_Fast_NoCascade_DataAugFlipRotate_SplitTraining"}
+                  "wandb":{"project":"sunscc"}
     }
 
     shutil.copy(os.path.join(run_dir,f'models/last.ckpt'), os.path.join(run_dir,f'models/{trained_parts_str}.ckpt'))
@@ -68,12 +70,9 @@ def main(args):
 
     conf2.model.parts_to_train = ['MLP2']
 
-    conf2.trainer.max_epochs=100
+    conf2.trainer.max_epochs=1
     conf2.dataset.char_to_balance = 'class2'
 
-    # conf2.module.lr=1e-8
-    # conf2.module.scheduler=all_overrides["scheduler"]
-    # conf2.module.scheduler_interval=all_overrides["scheduler_interval"]
     conf2.logger[0]['project']=all_overrides["wandb"]['project']
 
     module, datamodule = load_from_cfg(conf2, recursive=False)
@@ -129,16 +128,16 @@ def main(args):
 
     ####### TRAIN MLP3
     print('------------')
-    print('Training MLP2')
+    print('Training MLP3')
     print('------------')
-    print('Configuring MLP2')
+    print('Configuring MLP3')
 
 
     conf3 = deepcopy(config)
 
     conf3.model.parts_to_train = ['MLP3']
 
-    conf3.trainer.max_epochs=100
+    conf3.trainer.max_epochs=1
     conf3.dataset.char_to_balance = 'class3'
 
     # conf3.module.lr=1e-8

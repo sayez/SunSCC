@@ -3,9 +3,9 @@ defaults:
   - trainer: default
   - model: conf_unet
   - module: base_segmentation
-  - dataset: synthetic
-  - logger: "mlflow"
-  - server: "${host:}"
+  - dataset: deepsun
+  - logger: "none"
+  - server: "local"
   - exp: test
   # - override hydra/launcher: gpu
 

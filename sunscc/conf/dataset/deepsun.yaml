@@ -5,21 +5,21 @@ trainer:
   gpus: ${gpus}
   auto_scale_batch_size: false
 
-model:
-  input_format: ["image"]
-  output_format: ["segmentation"]
-  classes: ["penumbra", "umbra"]
-  _target_: sunscc.model.ConfUnet
-  model_cfg:
-    _target_: sunscc.model.ModelConfig
-  architecture:
-    first: 32
-    enc:
-      width: [16, 32, 48, 96]
-      repeat: [2, 3, 3, 4]
-    dec:
-      width: [48, 32, 32]
-      repeat: [2, 2, 1]
+# model:
+#   input_format: ["image"]
+#   output_format: ["segmentation"]
+#   classes: ["penumbra", "umbra"]
+#   _target_: sunscc.model.ConfUnet
+#   model_cfg:
+#     _target_: sunscc.model.ModelConfig
+#   architecture:
+#     first: 32
+#     enc:
+#       width: [16, 32, 48, 96]
+#       repeat: [2, 3, 3, 4]
+#     dec:
+#       width: [48, 32, 32]
+#       repeat: [2, 2, 1]
 
 use_dtypes: "???"
 

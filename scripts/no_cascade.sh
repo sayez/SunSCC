@@ -49,7 +49,7 @@ echo "random_move: $random_move, focus_on_group: $focus_on_group, use_dtypes: $u
 echo "cascade: $cascade"
 echo "seed: $seed"
 
-python -m sunscc/train.py  exp=Classification_Superclasses_fast gpus=1  \
+python -m sunscc.train.py  exp=Classification_Superclasses_fast gpus=1  \
             hydra.run.dir=$hydra_out_dir \
             seed=$seed \
             gpus=1 \

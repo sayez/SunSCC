@@ -26,14 +26,12 @@ def get_time_string():
 
 def main(args):
     # get current time
-    wl_dir = "/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2/all"  
+    wl_dir = ".datasets/classification/all"  
     wl_list = sorted(glob.glob(os.path.join(wl_dir, '**/*.FTS'),recursive=True))
     wl_basenames = [ os.path.basename(wl) for wl in wl_list ]
 
-    masks_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2/T425-T375-T325_fgbg'
+    masks_dir = '.datasets/classification/T425-T375-T325_fgbg'
 
-    sqlite_db_path = "/globalscratch/users/n/s/nsayez/Classification_dataset/drawings_sqlite.sqlite"
-    database = sqlite_db_path
     print( get_time_string(), f'num images in directory: {len(wl_list)}', )
 
     rotten_list = [
@@ -56,7 +54,7 @@ def main(args):
         
     ]
 
-    root_dir = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2'
+    root_dir = './datasets/classification'
     tmp = root_dir+'/wl_list2dbGroups_Classification.json'
 
     print(f'{get_time_string()}  opening huge db dict')
@@ -73,7 +71,7 @@ def main(args):
     show = False
 
     #####
-    param_optim_folder = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2/param_optimization'
+    param_optim_folder = './datasets/classification/param_optimization'
     #####
     image_out_dict = {}
     image_out_dict_stats = {}
@@ -103,14 +101,8 @@ def main(args):
                                                             repeat(input_type),
                                                             repeat(show)
                                                             )):
-            # print(result_key)
-#             print(result_dict_stats["ms_too_far"])
             image_out_dict[result_key] = result_dict
             image_out_dict_stats[result_key] = result_dict_stats
-            # image_out_dict_stats[result_key] = result_dict['stats']
-#             break
-   
-        
         
 
     print('num_images: ', len(list(image_out_dict.keys())))
@@ -120,10 +112,8 @@ def main(args):
         if v:
             num_groups += len(v['groups'])
     print("num_groups: ",num_groups)
-    # print(image_out_dict)
 
-
-    param_optim_folder2 = '/globalscratch/users/n/s/nsayez/Classification_dataset/2002-2019_2/param_optimP2'
+    param_optim_folder2 = './datasets/classification/param_optimP2'
 
     # saving the results in a json file
     out_file1 = os.path.join(param_optim_folder2, f'image_outdict_dist{args.look_distance}_Lon{args.kernel_bandwidthLon}_lat{args.kernel_bandwidthLat}_iter{args.n_iterations}.json')

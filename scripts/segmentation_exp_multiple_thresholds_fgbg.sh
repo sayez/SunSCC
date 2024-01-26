@@ -9,7 +9,7 @@ max_epochs=40
 project_name="2023_MultipleThresholds_fgbg_correct"
 
 
-run_numbers=(0 2 3 4 5 6 7 8 9 10)
+run_numbers=(0)
 
 scheduler_type='StepLR' # StepLR or MultistepLR or None
 scheduler_interval='epoch' # used for MultistepLR scheduler and StepLR scheduler
@@ -48,8 +48,9 @@ for run_number in ${run_numbers[@]}; do
         # echo "$job_name"
 
 
-        echo "sbatch Segmentation_slurm_launcher.sh workers=$num_workers classes=$classes use_dtype=$use_dtype num_epochs=$max_epochs project_name=$project_name job_name=$job_name, scheduler_type=$scheduler_type scheduler_interval=$scheduler_interval, scheduler_step_size=$scheduler_step_size"
-        sbatch ./sunscc/scripts/Segmentation_slurm_launcher.sh $num_workers $use_dtype $max_epochs $project_name $job_name $scheduler_type $scheduler_interval $scheduler_step_size $run_number $classes
+        # echo "sbatch Segmentation_slurm_launcher.sh workers=$num_workers classes=$classes use_dtype=$use_dtype num_epochs=$max_epochs project_name=$project_name job_name=$job_name, scheduler_type=$scheduler_type scheduler_interval=$scheduler_interval, scheduler_step_size=$scheduler_step_size run_number=$run_number classes=$classes"
+        echo "./sunscc/scripts/Segmentation_slurm_launcher.sh $num_workers $use_dtype $max_epochs $project_name $job_name $scheduler_type $scheduler_interval $scheduler_step_size $run_number $classes"
+        # sbatch ./sunscc/scripts/Segmentation_slurm_launcher.sh $num_workers $use_dtype $max_epochs $project_name $job_name $scheduler_type $scheduler_interval $scheduler_step_size $run_number $classes
     done
 done
 

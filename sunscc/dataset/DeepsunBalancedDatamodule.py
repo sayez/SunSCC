@@ -8,6 +8,9 @@ from sunscc.dataset import PrepareStrategy, SetupStrategy
 from hydra.utils import instantiate
 
 from torch.utils.data.sampler import WeightedRandomSampler
+
+# from .datamodule import BioblueDataModule
+
 from tqdm.notebook import tqdm
 import time
 
@@ -15,7 +18,8 @@ from .datamodule import SunSCCDataModule
 
 log = logging.getLogger(__name__)
 
-class SunSCCBalancedDataModule(pl.LightningDataModule):
+# class SunSCCBalancedDataModule(pl.LightningDataModule):
+class SunSCCBalancedDataModule(SunSCCDataModule):
     def __init__(
         self,
         data_dir: Path,
@@ -30,7 +34,16 @@ class SunSCCBalancedDataModule(pl.LightningDataModule):
         char_to_balance = 'class1', # 'class1' or 'class2' or 'class3'
         **kwargs,
     ):
-        super().__init__()
+        # super().__init__()
+        super().__init__(data_dir,
+                            dataset_name,
+                            train_dataset,
+                            val_dataset,
+                            test_dataset,
+                            strategies,
+                            batch_size,
+                            num_workers)
+        
         self.data_dir = Path(data_dir) / dataset_name
         self.train_ds = train_dataset
         self.val_ds = val_dataset

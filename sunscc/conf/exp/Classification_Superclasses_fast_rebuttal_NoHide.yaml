@@ -1,6 +1,7 @@
 # @package _global_
 defaults:
   - override /module: base_classification
+  - override /model: McIntoshGeneric
 
 
 trainer:
@@ -9,6 +10,12 @@ trainer:
   gpus: ${gpus}
   auto_scale_batch_size: false
   log_every_n_steps: 2
+  
+  # # For test purpose only (uncomment to test on a small subset)
+  # limit_train_batches: 1
+  # limit_val_batches: 1
+  # limit_test_batches: 1
+  # limit_predict_batches: 1
 
 # logger: []
 logger:
@@ -17,7 +24,7 @@ logger:
   - _target_: pytorch_lightning.loggers.WandbLogger
     # name: 'test'
     project: 'Deepsun_McIntosh'
-    resume: 'allow'
+    resume: 'auto'
     save_dir: "."
 
 use_dtypes: "???"
@@ -41,11 +48,6 @@ module:
   class2_weights: [1,1,1,1]
   class3_weights: [1,1,1]
   
-  # scheduler:
-  #   _target_: torch.optim.lr_scheduler.MultiStepLR
-  #   milestones: [25, 35]
-  #   gamma: 0.01
-  # scheduler_interval: 'epoch'
   scheduler:
     _target_: torch.optim.lr_scheduler.CosineAnnealingLR
     T_max: "???"
@@ -61,7 +63,7 @@ random_move_percent: .2
 
 dataset:
   _target_: sunscc.dataset.SunSCCBalancedDataModule
-  data_dir: "/globalscratch/users/n/s/nsayez/Classification_dataset/"
+  data_dir: "./datasets/classification/"
   dataset_name: "2002-2019_2"
   batch_size: 16
   num_workers: 12
@@ -122,8 +124,6 @@ dataset:
         focus_on_group: ${focus_on_group}
         random_move: false # ${random_move}
         random_move_percent: 0 #${random_move_percent}
-      # - _target_: sunscc.transforms.DeepsunClassifRandomRotate
-      # - _target_: sunscc.transforms.DeepsunClassifRandomFlip
 
 
 callbacks:
@@ -137,14 +137,6 @@ callbacks:
     monitor: val_acc1
     mode: max
     filename: "{epoch}-{val_meaniou:.2f}"
-  # model_last_weights:
-  #   _target_: pytorch_lightning.callbacks.ModelCheckpoint
-  #   dirpath: "./models"
-  #   save_last: true
-  #   monitor: val_meaniou
-  #   mode: max
-  #   save_weights_only: true
-  #   filename: "{epoch}-{val_meaniou:.2f}_weights"
   LR_monitor:
     _target_: "pytorch_lightning.callbacks.LearningRateMonitor"
   # Save_prediction:

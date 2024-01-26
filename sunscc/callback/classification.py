@@ -352,9 +352,15 @@ class McIntoshClassificationConfusionMatrixCallback(pl.Callback):
         assert (normalize == None ) or (normalize =='true') or (normalize == 'pred') or (normalize == 'all')
 
         self.normalize = normalize
-        self.output_dir = Path(output_dir)
-        if not self.output_dir.is_dir():
-            self.output_dir.mkdir(parents=True, exist_ok=True)
+        if output_dir is not None:
+            self.output_dir = Path(output_dir)
+            if not self.output_dir.is_dir():
+                self.output_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            self.output_dir = None
+        
+        print('output_dir', self.output_dir)
+
 
 
     def on_test_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
