@@ -41,9 +41,12 @@ scheduler_step_size=$8
 run_id=$9
 classes=${10}
 
+echo "This script was launched with the following command:"
+echo $0 $@
 
 dt=$(date '+%Y-%m-%d/%H-%M-%S');
 hydra_out_dir="./outputs/${dt}_${job_name}"
+echo "OUTPUT RUN DIRECTORY: $hydra_out_dir"
 
 # waittime=$((RANDOM % 20))
 # echo "sleeping for $waittime seconds"

@@ -28,13 +28,22 @@ n_iterations=$5
 
 num_cpu=$6
 
+wl_dir=$7
+masks_dir=$8
+sqlite_path=$9
+root_dir=${10}
+output_dir=${11}
+
 #print the hostname
 echo "hostname: $(hostname)"
 
 echo "num_cpu: $num_cpu input_type: $input_type  look_distance: $look_distance kernel_bandwidthLon: $kernel_bandwidthLon kernel_bandwidthLat: $kernel_bandwidthLat n_iterations: $n_iterations"
 
-python ./scripts/compute_huge_dict.py \
+# python ./scripts/clustering_compute_huge_dict.py \
+python ./utilities/clustering_compute_huge_dict.py \
+        --wl_dir $wl_dir --masks_dir $masks_dir --sqlite_db_path $sqlite_path \
+        --root_dir $root_dir --output_dir $output_dir \
         --input_type $input_type \
-         --look_distance $look_distance --kernel_bandwidthLon $kernel_bandwidthLon --kernel_bandwidthLat $kernel_bandwidthLat \
-         --n_iterations $n_iterations --num_cpu $num_cpu
+        --look_distance $look_distance --kernel_bandwidthLon $kernel_bandwidthLon --kernel_bandwidthLat $kernel_bandwidthLat \
+        --n_iterations $n_iterations --num_cpu $num_cpu
 

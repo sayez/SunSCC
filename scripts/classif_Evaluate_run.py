@@ -7,12 +7,12 @@ import torch
 from omegaconf import open_dict
 from hydra.utils import instantiate
 
-import os
-import sys
-# Get the absolute path of the repository's root directory
-module_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Add the root directory to the Python path
-sys.path.append(module_dir)
+# import os
+# import sys
+# # Get the absolute path of the repository's root directory
+# module_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# # Add the root directory to the Python path
+# sys.path.append(module_dir)
 
 from typing import Mapping
 
@@ -98,7 +98,7 @@ def main(args):
     #     strategy="ddp",
         precision=16
     )
-    trainer.tune(module, datamodule=datamodule)
+    # trainer.tune(module, datamodule=datamodule)
     
     module.load_state_dict(torch.load(run_dir / "models/ENCODER_MLP1_MLP2_MLP3.pth"))
 

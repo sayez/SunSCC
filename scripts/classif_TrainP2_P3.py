@@ -1,9 +1,10 @@
 import os
 import sys
-# Get the absolute path of the repository's root directory
-module_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Add the root directory to the Python path
-sys.path.append(module_dir)
+
+# # Get the absolute path of the repository's root directory
+# module_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# # Add the root directory to the Python path
+# sys.path.append(module_dir)
 
 from sunscc.transforms import *
 
@@ -70,7 +71,7 @@ def main(args):
 
     conf2.model.parts_to_train = ['MLP2']
 
-    conf2.trainer.max_epochs=1
+    conf2.trainer.max_epochs=args.max_epochs
     conf2.dataset.char_to_balance = 'class2'
 
     conf2.logger[0]['project']=all_overrides["wandb"]['project']
@@ -102,7 +103,7 @@ def main(args):
     #     strategy="ddp",
         precision=16
     )
-    trainer.tune(module, datamodule=datamodule)
+    # trainer.tune(module, datamodule=datamodule)
 
     print('loading model')
     module.load_state_dict(torch.load(run_dir / f"models/{trained_parts_str}.pth"))
@@ -137,7 +138,7 @@ def main(args):
 
     conf3.model.parts_to_train = ['MLP3']
 
-    conf3.trainer.max_epochs=1
+    conf3.trainer.max_epochs=args.max_epochs
     conf3.dataset.char_to_balance = 'class3'
 
     # conf3.module.lr=1e-8
@@ -172,7 +173,7 @@ def main(args):
     #     strategy="ddp",
         precision=16
     )
-    trainer.tune(module, datamodule=datamodule)
+    # trainer.tune(module, datamodule=datamodule)
 
     print('loading model')
     module.load_state_dict(torch.load(run_dir / "models/ENCODER_MLP1_MLP2.pth"))
@@ -199,6 +200,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--run_dir', type=str, default='.', help='run')
+    parser.add_argument('--max_epochs', type=int, default=100, help='max_epochs')
     args = parser.parse_args()
 
     cwd = os.getcwd()

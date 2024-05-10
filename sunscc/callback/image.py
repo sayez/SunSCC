@@ -238,7 +238,8 @@ class SavePredictionMaskCallback2(pl.Callback):
             self.output_dir.mkdir(parents=True, exist_ok=True)
         self.reconstructed_image = []
 
-    def on_predict_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: Any, batch: Any, batch_idx: int, dataloader_idx: int) -> None:
+    def on_predict_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: Any, batch: Any, batch_idx: int) -> None:
+    # def on_predict_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: Any, batch: Any, batch_idx: int, dataloader_idx: int) -> None:
         if trainer.sanity_checking:
             return
         
@@ -282,7 +283,8 @@ class SavePredictionMaskCallback2(pl.Callback):
                 self.reconstructed_image = []
             
         
-    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx) -> None:
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx) -> None:
+    # def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx) -> None:
         if trainer.sanity_checking:
             return
         

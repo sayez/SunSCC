@@ -59,6 +59,9 @@ data_aug=${21}
 data_aug_type=${22}
 data_aug_freq=${23}
 
+echo This script was run with command:
+echo $0 $@
+
 #save pwd in a variable
 p=$(pwd)
 # set an environment variable for dataset path

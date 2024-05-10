@@ -20,8 +20,10 @@
 #SBATCH --time=06:00:00
 
 run_dir=$1
+p2_p3_max_epochs=$2
 
 echo "run_dir: $run_dir"
+echo "p2_p3_max_epochs: $p2_p3_max_epochs"
 
 #save pwd in a variable
 p=$(pwd)
@@ -29,4 +31,4 @@ p=$(pwd)
 export SUNSCCDATASET_PATH=$p
 echo "SUNSCCDATASET_PATH: $SUNSCCDATASET_PATH"
 
-python ./scripts/classif_TrainP2_P3.py --run_dir $run_dir
+python ./scripts/classif_TrainP2_P3.py --run_dir $run_dir --max_epochs $p2_p3_max_epochs

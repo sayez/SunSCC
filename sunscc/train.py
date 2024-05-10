@@ -14,8 +14,11 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import seed_everything
 
 
-@hydra.main(config_path="conf", config_name="config")
+@hydra.main(config_path="conf", config_name="config", version_base='1.2' )
+# @hydra.main(config_path="conf", config_name="config")
 def main(cfg: DictConfig) -> None:
+    torch.set_float32_matmul_precision('medium')
+    
     seed_everything(cfg.seed, workers=True)
     latest_checkpoint = Path(os.getcwd()) / "models/last.ckpt"
     latest_checkpoint = latest_checkpoint if latest_checkpoint.exists() else None
@@ -40,7 +43,7 @@ def main(cfg: DictConfig) -> None:
         _recursive_=True,
         _convert_="all",
     )
-    trainer.tune(module, datamodule=datamodule)
+    # trainer.tune(module, datamodule=datamodule)
     trainer.fit(module, datamodule=datamodule, ckpt_path=latest_checkpoint)
     return {key: value.item() for key, value in trainer.callback_metrics.items()}
 

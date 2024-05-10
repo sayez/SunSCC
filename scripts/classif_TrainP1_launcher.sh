@@ -7,7 +7,8 @@ focus_on_group=false
 
 
 use_dtypes=['image','T425-T375-T325_fgbg']
-use_npy='rebuttal_all_revised_filtered/all_samples.npy'
+use_npy='rebuttal_all_revised_filtered/all_samples.npy' # Do not set the _train.npy, _val.npy or test.npy,
+                                                        # it is added automatically in the dataloader.
 
 use_classes=['A','B','C','SuperGroup','H']
 
@@ -21,17 +22,18 @@ eta_min=1e-8
 batch_size=16
 num_workers=16
 
-char_to_balance=('class1')
+char_to_balance=('class1')  # We train only the Z component of the classifier
 
 visual_input=['image','excentricity_map']
 
 numeric_input=[]
 
-j_name='run' # Rebuttal with the new complete dataset 
-
+j_name='run' # Prefix of the job name (used for wandb run name) and
+             # the name of the folder where the model is saved.
+             
+# Parameters for data augmentation
 data_aug=true
 data_aug_type='local_avg'
-
 data_aug_freq=(0.0)
 
 cascade=true
@@ -39,7 +41,8 @@ wandb_project='sunscc'
 
 resnet_type=34
 
-runids=(0)
+runids=(0) # id numbers of the runs to perform,
+           # set several values to get an ensemble of classifiers
 
 job_ids=()
 
