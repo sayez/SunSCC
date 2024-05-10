@@ -28,7 +28,7 @@ notebooks/test_images/
 
 notebooks/Segmentation/*.json
 
-./*.out
+*.out
 
 
 ## Project ignores
