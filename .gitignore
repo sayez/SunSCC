@@ -14,6 +14,7 @@ models/
 !models/__init__.py
 outputs/
 
+wandb/
 
 # Additions
 notebooks/*.png
@@ -23,8 +24,10 @@ notebooks/models/
 notebooks/models2/
 notebooks/predictions/
 notebooks/wandb/
-wandb/
 notebooks/test_images/
+
+notebooks/Segmentation/*.json
+
 
 ## Project ignores
 .vscode/

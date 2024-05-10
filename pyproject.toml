@@ -1,0 +1,44 @@
+[project]
+name = "sunscc"
+version = "1.0.0"
+dependencies = [
+    "numpy",
+    "sunpy",
+    "pytorch_lightning",
+    "omegaconf",
+    "hydra-core",
+    "matplotlib",
+    "tqdm",
+    "scikit-learn",
+    "scikit-image",
+    "pandas",
+    "opencv-python",
+    "itkwidgets",
+    "torchvision",
+    "torchmetrics",
+    "mlflow",
+    "wandb",
+    "nibabel",
+    "SimpleITK",
+    "monai",
+    "albumentations=1.0.3",
+    "kornia",
+    "einops",
+    "k3d",
+    "vtk",
+    "seaborn",
+    "configparser",
+    "ipywidgets",
+    "scipy",
+    "cachetools",
+    "shapely",
+    "pymysql",
+]
+
+[tool.setuptools.packages.find]
+# All the following settings are optional:
+include = ["sunscc"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
