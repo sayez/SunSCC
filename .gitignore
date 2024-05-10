@@ -28,6 +28,8 @@ notebooks/test_images/
 
 notebooks/Segmentation/*.json
 
+./*.out
+
 
 ## Project ignores
 .vscode/
