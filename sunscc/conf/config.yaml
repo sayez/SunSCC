@@ -12,5 +12,6 @@ defaults:
 seed: 0
 hydra:
   job:
+    chdir: True
     env_set:
       DATA_DIR: "${oc.env:HOME}/projects/sunscc/data"

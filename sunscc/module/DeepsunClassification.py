@@ -52,11 +52,16 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
             classifier = instantiate(classifier)
 
         if class1_weights is not None:
-            class1_weights = torch.tensor(class1_weights, dtype=torch.float)
+            self.class1_weights = torch.tensor(class1_weights, dtype=torch.float)
         if class2_weights is not None:
-            class2_weights = torch.tensor(class2_weights, dtype=torch.float)
+            self.class2_weights = torch.tensor(class2_weights, dtype=torch.float)
         if class3_weights is not None:
-            class3_weights = torch.tensor(class3_weights, dtype=torch.float)
+            self.class3_weights = torch.tensor(class3_weights, dtype=torch.float)
+
+        self.c1_task = "binary" if len(self.class1_weights) == 2 else "multiclass"
+        self.c2_task = "binary" if len(self.class2_weights) == 2 else "multiclass"
+        self.c3_task = "binary" if len(self.class3_weights) == 2 else "multiclass"
+
 
         # print(classifier)
 
@@ -68,9 +73,9 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
         self.num_classes = len(self.classes)
 
         if loss['_target_'] == "torch.nn.CrossEntropyLoss":
-            self.loss1 = instantiate(loss,weight=class1_weights)
-            self.loss2 = instantiate(loss,weight=class2_weights)
-            self.loss3 = instantiate(loss,weight=class3_weights)
+            self.loss1 = instantiate(loss,weight=self.class1_weights)
+            self.loss2 = instantiate(loss,weight=self.class2_weights)
+            self.loss3 = instantiate(loss,weight=self.class3_weights)
         else:
             self.loss1 = instantiate(loss)
             self.loss2 = instantiate(loss)
@@ -128,9 +133,9 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
         loss2 = self.loss2(c2_hat, c2)
         loss3 = self.loss3(c3_hat, c3)
 
-        acc_fct1 = torchmetrics.Accuracy().to(c1_hat.device)
-        acc_fct2 = torchmetrics.Accuracy().to(c2_hat.device)
-        acc_fct3 = torchmetrics.Accuracy().to(c3_hat.device)
+        acc_fct1 = torchmetrics.Accuracy(task = self.c1_task, num_classes=self.class1_weights.shape[0]).to(c1_hat.device)
+        acc_fct2 = torchmetrics.Accuracy(task = self.c2_task, num_classes=self.class2_weights.shape[0]).to(c2_hat.device)
+        acc_fct3 = torchmetrics.Accuracy(task = self.c3_task, num_classes=self.class3_weights.shape[0]).to(c3_hat.device)
 
         pred1 = c1_hat.softmax(dim=-1)
         acc1 = acc_fct1(pred1,c1)
@@ -167,9 +172,9 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
         loss2 = self.loss2(c2_hat, c2)
         loss3 = self.loss3(c3_hat, c3)
 
-        acc_fct1 = torchmetrics.Accuracy().to(c1_hat.device)
-        acc_fct2 = torchmetrics.Accuracy().to(c2_hat.device)
-        acc_fct3 = torchmetrics.Accuracy().to(c3_hat.device)
+        acc_fct1 = torchmetrics.Accuracy(task = self.c1_task, num_classes=self.class1_weights.shape[0]).to(c1_hat.device)
+        acc_fct2 = torchmetrics.Accuracy(task = self.c2_task, num_classes=self.class2_weights.shape[0]).to(c2_hat.device)
+        acc_fct3 = torchmetrics.Accuracy(task = self.c3_task, num_classes=self.class3_weights.shape[0]).to(c3_hat.device)
 
         pred1 = c1_hat.softmax(dim=-1)
         acc1 = acc_fct1(pred1,c1)
@@ -199,9 +204,9 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
         # classif, classif_hat = self.common_step(batch)
         c1, c1_hat, c2, c2_hat, c3, c3_hat = self.common_step(batch)
         
-        acc_fct1 = torchmetrics.Accuracy().to(c1_hat.device)
-        acc_fct2 = torchmetrics.Accuracy().to(c2_hat.device)
-        acc_fct3 = torchmetrics.Accuracy().to(c3_hat.device)
+        acc_fct1 = torchmetrics.Accuracy(task = self.c1_task, num_classes=self.class1_weights.shape[0]).to(c1_hat.device)
+        acc_fct2 = torchmetrics.Accuracy(task = self.c2_task, num_classes=self.class2_weights.shape[0]).to(c2_hat.device)
+        acc_fct3 = torchmetrics.Accuracy(task = self.c3_task, num_classes=self.class3_weights.shape[0]).to(c3_hat.device)
 
         pred1 = c1_hat.softmax(dim=-1)
         acc1 = acc_fct1(pred1,c1)
@@ -267,6 +272,10 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
                 threshold=1e-3,
                 threshold_mode="abs",
             )
+
+        parts_to_train = self.classifier.parts_to_train
+        monitored = "train_loss3" if "MLP3" in parts_to_train else "train_loss2" if "MLP2" in parts_to_train else "train_loss1"
+
         return dict(
             optimizer=optimizer,
             lr_scheduler={
@@ -274,7 +283,8 @@ class McIntoshClassifier_Superclasses(pl.LightningModule):
                 "interval": self.scheduler_interval,
                 "frequency": 1,
                 "reduce_on_plateau": True,
-                "monitor": "val_loss",
+                # "monitor": "val_loss",
+                "monitor": monitored,
             },
         )
 

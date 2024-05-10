@@ -4,7 +4,8 @@ from functools import partial
 from albumentations.augmentations import transforms
 
 Compose = partial(
-    A.Compose, additional_targets={"mip-image": "image", "segmentation": "mask"}
+    A.Compose, additional_targets={"mip-image": "image", "segmentation": "mask"},
+    #is_check_shapes=False # May be needed for more recent versions of albumentations
 )
 
 crop_and_rotate = Compose(

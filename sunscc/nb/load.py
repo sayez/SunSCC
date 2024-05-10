@@ -16,6 +16,9 @@ from omegaconf import OmegaConf
 from pathlib import Path
 
 
+from omegaconf import OmegaConf ,open_dict
+
+
 def load_from_runid(run_id: str, ckpt_name: str = "epoch"):
     mlflow_client = MlflowClient()
     run = mlflow.get_run(run_id)
@@ -139,6 +142,55 @@ def load_from_dir2(run_path, model_path=None, load_trainer=False, override=None)
 
         if isinstance(cfg.trainer.gpus, int):
             cfg.trainer.gpus = pick_gpu(cfg.trainer.gpus)
+
+        trainer: pl.Trainer = instantiate(
+            cfg.trainer, logger=logger, default_root_dir=".", callbacks=callbacks
+        )
+
+    return cfg, model, datamodule, trainer
+
+
+def load_from_dir_new_pl(run_path, model_path=None, load_trainer=False, override=None):
+    config_path = run_path / ".hydra/config.yaml"
+    cfg = OmegaConf.load(config_path)
+    
+    # print(type(cfg))
+
+    with initialize_config_dir(config_dir=str(config_path.parents[0])):
+        cfg = compose(
+            config_name="config", overrides=override, return_hydra_config=True
+        )
+    
+
+    module_class: LightningModule = getattr(
+        module, cfg.module._target_.split(".")[-1]
+    )
+    if model_path is None:
+        model_path = run_path / "models/last.ckpt"
+    model = module_class.load_from_checkpoint(model_path)
+
+    # print(cfg.dataset)
+
+    datamodule = instantiate(cfg.dataset, _recursive_=False)
+    datamodule.prepare_data()
+    # datamodule.setup()
+
+    trainer: Optional[pl.Trainer] = None
+    if load_trainer:
+        # print(type(cfg.logger[0]))
+        tmp_logger = cfg.logger if type(cfg.logger) == DictConfig else cfg.logger[0]
+        logger = instantiate(tmp_logger)
+        callbacks = []
+        if isinstance(cfg.callbacks, Mapping):
+            cfg.callbacks = [cb for cb in cfg.callbacks.values()]
+        for callback in cfg.callbacks:
+            callback = instantiate(callback)
+            callback.cfg = cfg  # FIXME : ugly hack
+            callbacks.append(callback)
+
+        if isinstance(cfg.trainer.devices, int):
+            with open_dict(cfg.trainer):
+                cfg.trainer.devices = pick_gpu(cfg.trainer.devices)
 
         trainer: pl.Trainer = instantiate(
             cfg.trainer, logger=logger, default_root_dir=".", callbacks=callbacks

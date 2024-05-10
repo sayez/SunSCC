@@ -456,9 +456,11 @@ class ClassificationDatasetSuperclasses_fast(Dataset):
         first_classes, second_classes, third_classes, 
         dataset_file, classification='SuperClass' , transforms=None) -> None:
         super().__init__()
-        if isinstance(transforms, collections.Mapping):
+        if isinstance(transforms, collections.abc.Mapping):
+        # if isinstance(transforms, collections.Mapping):
             transforms = partial(call, config=transforms)
-        elif isinstance(transforms, collections.Sequence):
+        elif isinstance(transforms, collections.abc.Sequence):
+        # elif isinstance(transforms, collections.Sequence):
             transforms_init = []
             for transform in transforms:
                 transforms_init.append(instantiate(transform))

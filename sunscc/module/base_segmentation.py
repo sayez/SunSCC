@@ -26,6 +26,7 @@ class BaseSegment(pl.LightningModule):
         scheduler_interval = 'epoch',
         class_weights=None,
     ):
+        print('BaseSegment')
         super().__init__()
         self.save_hyperparameters(logger=False)
         self.input_format = segmenter["input_format"]
@@ -56,9 +57,12 @@ class BaseSegment(pl.LightningModule):
         self.scheduler_interval = scheduler_interval
         self.iou = nn.ModuleDict()
         for set in ["train", "val", "test"]:
+            # task  = 'binary' if len(self.classes) == 1 else 'multiclass'
+            # self.iou[f"{set}_mean"] = IoU(task, num_classes=len(self.classes) + 1)
             self.iou[f"{set}_mean"] = IoU(num_classes=len(self.classes) + 1)
             for i, name in enumerate(["bg", *self.classes]):
                 self.iou[f"{set}_{name}"] = IoU(
+                    # task, num_classes=len(self.classes) + 1, class_index=i
                     num_classes=len(self.classes) + 1, class_index=i
                 )
 
@@ -97,12 +101,14 @@ class BaseSegment(pl.LightningModule):
     #     print("seg_hat: ", seg_hat.shape, 'uniques : ', torch.unique(seg_hat))        
     #     return seg, seg_hat
 
-    def common_step(self, batch):
+    def common_step(self, batch, phase='train'):
         # for k in batch:
         #     print(k, batch[k].shape)
         # print(type(batch["segmentation"]))
-        seg = batch["segmentation"].to(torch.long)  # for training # .to(torch.float)
-        # seg = batch["segmentation"][0].to(torch.long) # for testing # .to(torch.float)
+        if phase == 'test':
+            seg = batch["segmentation"][0].to(torch.long) # for testing # .to(torch.float)
+        else:
+            seg = batch["segmentation"].to(torch.long)  # for training # .to(torch.float)
 
         input_sample = {}
         for dtype in self.input_format:
@@ -115,47 +121,51 @@ class BaseSegment(pl.LightningModule):
         return seg, seg_hat
 
     def training_step(self, batch, batch_idx):
-        seg, seg_hat = self.common_step(batch)
+        bs = batch["segmentation"].shape[0]
+        seg, seg_hat = self.common_step(batch, 'train')
         # print(torch.unique(seg), torch.unique(seg_hat))
         # print(self.loss.include_background)
         loss = self.loss(seg_hat, seg)
-        self.log("train_loss", loss, on_epoch=True, on_step=False, logger=True)
+        self.log("train_loss", loss, on_epoch=True, on_step=False, logger=True, batch_size=bs)
         for name, iou in self.iou.items():
             if "train" not in name:
                 continue
             iou(F.softmax(seg_hat, dim=1), seg)
             progbar = name == "train_mean"
-            self.log(f"{name}iou", iou, on_step=False, on_epoch=True, prog_bar=False)
-            self.log(f"{name}iou_step", iou, prog_bar=progbar)
+            self.log(f"{name}iou", iou, on_step=False, on_epoch=True, prog_bar=False, batch_size=bs)
+            self.log(f"{name}iou_step", iou, prog_bar=progbar, batch_size=bs)
         return dict(loss=loss)
 
     def validation_step(self, batch, batch_idx):
-        seg, seg_hat = self.common_step(batch)
+        bs = batch["segmentation"].shape[0]
+
+        seg, seg_hat = self.common_step(batch, 'val')
         loss = self.loss(seg_hat, seg)
-        self.log("val_loss", loss)
+        self.log("val_loss", loss, batch_size=bs)
         for name, iou in self.iou.items():
             if "val" not in name:
                 continue
             iou(F.softmax(seg_hat, dim=1), seg)
             progbar = name == "val_mean"
-            self.log(f"{name}iou", iou, prog_bar=progbar)
+            self.log(f"{name}iou", iou, prog_bar=progbar, batch_size=bs)
         return dict(loss=loss)
 
     def test_step(self, batch, batch_idx):
+        bs = batch["image"][0].shape[0]
         # print('test_step')
         # print(batch.keys()  )
         # print(batch["segmentation"])
         # print(batch["segmentation"].shape)
         # print(batch["segmentation"][0].shape)
-        seg, seg_hat = self.common_step(batch)
+        seg, seg_hat = self.common_step(batch, 'test')
         loss = self.loss(seg_hat, seg)
-        self.log("test_loss", loss)
+        self.log("test_loss", loss, batch_size=bs)
         for name, iou in self.iou.items():
             if "test" not in name:
                 continue
             iou(F.softmax(seg_hat, dim=1), seg)
             progbar = name == "test_mean"
-            self.log(f"{name}iou", iou, prog_bar=progbar)
+            self.log(f"{name}iou", iou, prog_bar=progbar, batch_size=bs)
         return dict(loss=loss)
 
     def configure_optimizers(self):

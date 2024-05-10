@@ -1,4 +1,3 @@
-from turtle import forward
 from .blocks import create_cba, get_all_blocks, ClassificationOutput
 from .model_wrapper import ModelWrapper
 from .utils import ConvBlock, SubIdentity

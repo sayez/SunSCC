@@ -3,7 +3,6 @@ from configparser import Interpolation
 from re import L
 from sre_constants import IN_IGNORE
 from tokenize import group
-from kornia import center_crop
 import torch
 
 from copy import deepcopy
@@ -16,6 +15,7 @@ from albumentations.augmentations.crops.transforms import CropNonEmptyMaskIfExis
 from albumentations.augmentations.geometric.transforms import ShiftScaleRotate
 from albumentations.augmentations.geometric.rotate import Rotate, RandomRotate90, SafeRotate
 from albumentations.augmentations.transforms import Flip
+# from albumentations.augmentations.geometric.transforms import Flip  # For more recent versions of albumentations
 import albumentations.augmentations.crops.functional as F_crops
 from albumentations.augmentations import functional as F_aug
 from albumentations.augmentations.geometric import functional as F_geom
@@ -293,6 +293,7 @@ class DeepsunRandomRotate(SafeRotate):
         kwargs['segmentation'] = processed_kwargs['masks']
 
         self.params = self.get_params()
+        # print(f'RandomRotate: { self.params}')
 
         if 'solar_disk' in kwargs:
             kwargs['solar_disk'] = F_geom.safe_rotate(kwargs['solar_disk'].astype(np.uint8), 

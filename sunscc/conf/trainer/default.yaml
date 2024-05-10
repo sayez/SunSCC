@@ -1,18 +1,20 @@
 _target_: pytorch_lightning.Trainer
-accumulate_grad_batches: null
-amp_backend: "native"
-amp_level: null
-log_gpu_memory: null
-auto_lr_find: false
-auto_scale_batch_size: false
-auto_select_gpus: false
+accumulate_grad_batches: 1
+# amp_backend: "native"
+# amp_level: null
+# log_gpu_memory: null
+# auto_lr_find: false
+# auto_scale_batch_size: false
+# auto_select_gpus: false
 benchmark: null
 enable_checkpointing: true # current code creates a ModelCheckpoint manually
 check_val_every_n_epoch: 1
 detect_anomaly: false
 deterministic: false
 fast_dev_run: false
-gpus: null
+# gpus: null
+accelerator: gpu
+devices: null
 gradient_clip_val: null
 gradient_clip_algorithm: null
 
@@ -35,18 +37,18 @@ min_steps: null
 max_time: null
 
 num_nodes: 1
-num_processes: null
+# num_processes: null
 num_sanity_val_steps: 2
 reload_dataloaders_every_n_epochs: 0
 
-strategy: null
+# strategy: null
 sync_batchnorm: false
-track_grad_norm: -1
+# track_grad_norm: -1
 
 val_check_interval: 1.0
 
 enable_model_summary: true
-weights_save_path: null
+# weights_save_path: null
 
-move_metrics_to_cpu: false
-multiple_trainloader_mode: "max_size_cycle"
+# move_metrics_to_cpu: false
+# multiple_trainloader_mode: "max_size_cycle"

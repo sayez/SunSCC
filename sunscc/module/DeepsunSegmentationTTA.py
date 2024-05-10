@@ -31,6 +31,7 @@ class DeepsunSegmentation_TTA(pl.LightningModule):
         num_tta=5,
         transforms_tta=None
     ):
+        print('DeepsunSegmentation_TTA')
         super().__init__()
         self.save_hyperparameters(logger=False)
         self.input_format = segmenter["input_format"]
@@ -78,14 +79,17 @@ class DeepsunSegmentation_TTA(pl.LightningModule):
         self.scheduler_interval = scheduler_interval
         self.iou = nn.ModuleDict()
         for set in ["train", "val", "test"]:
+            task = "binary" if len(self.classes) == 1 else "multiclass"
             # self.iou[f"{set}_mean"] = IoU(num_classes=len(self.classes) + 1)
-            self.iou[f"{set}_mean"] = DeepsunIoU(num_classes=len(self.classes) + 1, ignore_index=loss.ignore_index)
+            # self.iou[f"{set}_mean"] = DeepsunIoU(num_classes=len(self.classes) + 1, ignore_index=loss.ignore_index)
+            self.iou[f"{set}_mean"] = DeepsunIoU(task, num_classes=len(self.classes) + 1, ignore_index=loss.ignore_index)
             for i, name in enumerate(["bg", *self.classes]):
                 # self.iou[f"{set}_{name}"] = IoU(
                 #     num_classes=len(self.classes) + 1, class_index=i
                 # )                
                 self.iou[f"{set}_{name}"] = DeepsunIoU(
-                    num_classes=len(self.classes) + 1, class_index=i, ignore_index=loss.ignore_index
+                    task, num_classes=len(self.classes) + 1, class_index=i, ignore_index=loss.ignore_index
+                    # num_classes=len(self.classes) + 1, class_index=i, ignore_index=loss.ignore_index
                 )
 
 

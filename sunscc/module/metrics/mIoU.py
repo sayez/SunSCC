@@ -1,7 +1,7 @@
 from typing import Optional
 import pytorch_lightning as pl
-from torchmetrics import ConfusionMatrix
-from torchmetrics.classification import MulticlassConfusionMatrix
+# from torchmetrics import ConfusionMatrix
+from torchmetrics.classification import MulticlassConfusionMatrix as ConfusionMatrix
 import torch
 
 
@@ -9,14 +9,14 @@ class IoU(ConfusionMatrix):
     def __init__(
         self,
         num_classes: int,
-        threshold: float = 0.5,
+        # threshold: float = 0.5,
         class_index: Optional[int] = None,
     ):
         super().__init__(
             num_classes,
             normalize=None,
-            threshold=threshold,
-            compute_on_step=True,
+            # threshold=threshold,
+            # compute_on_step=True,
             dist_sync_on_step=False,
         )
         self.class_index = class_index
@@ -30,12 +30,12 @@ class IoU(ConfusionMatrix):
             return iou[self.class_index]
 
 
-class DeepsunIoU(MulticlassConfusionMatrix):
+class DeepsunIoU(ConfusionMatrix):
     def __init__(
         self,
         num_classes: int,
         ignore_index=None,
-        threshold: float = 0.5,
+        # threshold: float = 0.5,
         class_index: Optional[int] = None,
     ):
         # num_classes = num_classes if ignore_index is None else num_classes+1
@@ -44,8 +44,8 @@ class DeepsunIoU(MulticlassConfusionMatrix):
             num_classes,
             normalize=None,
             ignore_index = ignore_index,
-            threshold=threshold,
-            compute_on_step=True,
+            # threshold=threshold,
+            # compute_on_step=True,
             dist_sync_on_step=False,
         )
         self.class_index = class_index
