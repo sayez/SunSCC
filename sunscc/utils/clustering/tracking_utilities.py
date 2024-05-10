@@ -2,6 +2,7 @@ import numpy as np
 import sunpy as sp
 import sunpy.map as sunmap
 from sunpy.physics.differential_rotation import diff_rot, solar_rotate_coordinate
+from sunpy.coordinates import frames
 
 
 from astropy.io import fits
@@ -90,7 +91,6 @@ def query_table(datetime_str, database, table):
             # print(result.keys())
             return result
 
-from sunpy.coordinates import frames , transformations
 def coordinates2pixel(fits_file, Longitude, Latitude):
     print(fits_file)
     hdulst = fits.open(fits_file)[0]

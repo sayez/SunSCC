@@ -6,7 +6,7 @@ import matplotlib.patches as patches
 import skimage.io as io
 
 
-import clustering_utilities as c_utils
+import sunscc.utils.clustering.clustering_utilities as c_utils
 
 import importlib
 importlib.reload(c_utils)

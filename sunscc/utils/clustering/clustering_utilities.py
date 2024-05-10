@@ -32,9 +32,10 @@ from datetime import datetime, timedelta
 from tqdm.notebook import tqdm
 
 import importlib
-import tracking_utilities as utils #import the module here, so that it can be reloaded.
+import sunscc.utils.clustering.tracking_utilities as utils #import the module here, so that it can be reloaded.
+import sunscc.utils.clustering.Class2Bbox as c2bb
+import sunscc.utils.clustering.MeanShift as ms
 importlib.reload(utils)
-import Class2Bbox as c2bb
 importlib.reload(c2bb)
 
 import warnings
@@ -625,7 +626,6 @@ def get_mask_from_coords(mask, coords):
                         break
         return m
 
-import MeanShift as ms
 
 def process_one_image(wl,
                       huge_db_dict, 
