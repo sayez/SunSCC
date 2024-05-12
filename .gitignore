@@ -12,7 +12,6 @@ datasets/
 !datasets/__init__.py
 models/
 !models/__init__.py
-outputs/
 
 wandb/
 
