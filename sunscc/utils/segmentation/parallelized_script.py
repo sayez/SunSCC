@@ -24,9 +24,9 @@ import numpy as np
 import os, sys
 # print(os.path.abspath('..'))
 # sys.path.append(os.path.abspath('..'))
-from create_detection_masks import *
-import Otsu_Grid_utilities as otsu_grid
-import Otsu_Local_utilities as otsu_local
+from .create_detection_masks import *
+import sunscc.utils.segmentation.Otsu_Grid_utilities as otsu_grid
+import sunscc.utils.segmentation.Otsu_Local_utilities as otsu_local
 
 import concurrent.futures
 
