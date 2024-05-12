@@ -13,6 +13,8 @@ datasets/
 models/
 !models/__init__.py
 
+*.egg-info/
+
 wandb/
 
 # Additions
