@@ -13,7 +13,6 @@ notebooks/images/
 models/
 !models/__init__.py
 
-sunscc.egg-info/
 
 wandb/
 
@@ -28,6 +27,7 @@ notebooks/wandb/
 notebooks/test_images/
 
 notebooks/Segmentation/*.json
+notebooks/Segmentation/*.pdf
 
 *.out
 
