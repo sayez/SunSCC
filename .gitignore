@@ -8,12 +8,12 @@ data/
 artifacts/
 tmp/
 notebooks/images/
-datasets/
-!datasets/__init__.py
+# datasets/classification/
+# datasets/segmentation/
 models/
 !models/__init__.py
 
-*.egg-info/
+sunscc.egg-info/
 
 wandb/
 
