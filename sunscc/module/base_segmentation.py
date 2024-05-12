@@ -68,12 +68,18 @@ class BaseSegment(pl.LightningModule):
 
     def predict(self, x):
         x = self.transfer_batch_to_device(x, self.device, 0)
-        return self(x)
+
+        input_sample = {}
+        for dtype in self.input_format:
+            input_sample[dtype] = x[dtype].to(torch.float)
+
+        return self(input_sample)
 
     def forward(self, x):
         # print('forward')
         # print(x)
-        for dtype in x:
+        # for dtype in x:
+        for dtype in self.input_format:
             # print(dtype)
             x[dtype] = x[dtype].unsqueeze(1).to(torch.float)
         seg = self.segmenter(x)[0]

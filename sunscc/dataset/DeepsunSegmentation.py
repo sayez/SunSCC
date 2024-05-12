@@ -23,6 +23,8 @@ from .utils import *
 from astropy.io import fits
 import matplotlib.pyplot as plt
 
+import glob
+
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +55,8 @@ class DeepsunSegmentationDataset(Dataset):
             transforms = Compose(transforms_init)
 
         self.transforms = transforms
-        print(os.getcwd())
+        # print(root_dir)
+        # print(os.getcwd())
         self.root_dir = Path(root_dir) / partition
         self.dtypes = dtypes
 
@@ -117,6 +120,93 @@ class DeepsunSegmentationDataset(Dataset):
         hdulst.close()
         return sample
 
+class DeepsunSegmentationPredictDataset(Dataset):
+    def __init__(
+        self, root_dir, dtypes, patch_side, transforms=None) -> None:
+        super().__init__()
+        if isinstance(transforms, collections.abc.Mapping):
+            transforms = partial(call, config=transforms)
+        elif isinstance(transforms, collections.abc.Sequence):
+            transforms_init = []
+            for transform in transforms:
+                transforms_init.append(instantiate(transform))
+            transforms = Compose(transforms_init)
+
+        self.transforms = transforms
+        self.root_dir = Path(root_dir)
+        self.dtypes = dtypes
+
+        self.main_dtype = dtypes[0]
+
+        self.files = []
+        # self.masks_lists = { t: sorted((self.root_dir / t).iterdir()) for t in self.target_types}
+
+        # for i, file in enumerate(sorted((self.root_dir / self.main_dtype).iterdir())):
+        for i, file in enumerate(sorted(glob.glob(str(self.root_dir / '*.FTS')))):
+            cur = {}
+            cur[self.main_dtype] = file
+            cur['name'] = os.path.basename(file)
+            # tmp1 = os.path.splitext(cur['name'])[0]
+            # for t in self.target_types:            
+            #     cur[t] = self.masks_lists[t][i]
+            #     tmp2 = os.path.splitext(os.path.basename(cur[t]))[0]         
+            #     assert tmp1 == tmp2
+
+            self.files.append(cur)
+        # print('HEHEHEHEHHEHEHEHEHHEHEHEHEHEHEHEHEHEHE')
+        # print(self.files)
+
+        self.patch_side = patch_side
+        self.grid_size = self.get_grid_size(self.files[0]['image'], self.patch_side)
+
+    def get_grid_size(self, img_fn, patch_side):
+        side = io.imread(str(img_fn)).shape[0] // patch_side
+        return side*side
+
+    def __len__(self) -> int:
+        
+        return len(self.files)* self.grid_size
+
+    def crop_patch(self, img, patch_index):
+        i = patch_index // int(np.sqrt(self.grid_size))
+        j = patch_index % int(np.sqrt(self.grid_size))
+        return img.copy()[
+                            i*self.patch_side: (i+1)*self.patch_side,
+                            j*self.patch_side: (j+1)*self.patch_side
+                        ]
+
+
+    def __getitem__(self, index: int, do_transform=True):
+        # print("GET ITEM 1")
+        # print(do_transform)
+        sample = {} 
+        idx_img = index // self.grid_size
+        idx_patch = index % self.grid_size
+
+        img_name =  self.files[idx_img]["image"]
+        hdulst:fits.HDUList = fits.open(img_name)
+        image = hdulst[0]
+        header = image.header
+        center = np.array(image.shape)//2
+        radius = header['SOLAR_R']
+        sample['solar_disk'] = create_circular_mask( image.shape[0], image.shape[1] ,center,radius)
+        
+        # print("GET ITEM 2")
+
+        sample["image"] = self.crop_patch((io.imread(img_name)).astype(float), idx_patch) # load image from directory with skimage
+
+        sample['sample_id'] = f'{idx_img}_{idx_patch}'
+        # print("Avant", sample["segmentation"].shape)
+        if self.transforms is not None and do_transform:
+            
+            sample = self.transforms(**sample)
+
+        #####################################
+        sample["segmentation"] =  np.zeros_like(sample["image"])
+        
+        hdulst.close()
+
+        return sample
 
 class DeepsunSegmentationTestDataset(Dataset):
     def __init__(
@@ -209,6 +299,18 @@ class DeepsunSegmentationTestDataset(Dataset):
         hdulst.close()
 
         return sample
+    
+def get_grid_size(img_fn, patch_side):
+    side = io.imread(str(img_fn)).shape[0] // patch_side
+    return side*side
+    
+def crop_patch(img, patch_index, patch_side, grid_size):
+    i = patch_index // int(np.sqrt(grid_size))
+    j = patch_index % int(np.sqrt(grid_size))
+    return img[
+                        i*patch_side: (i+1)*patch_side,
+                        j*patch_side: (j+1)*patch_side
+                    ].copy()
 
 class DeepsunSegmentationTTA_TestDataset(Dataset):
     def __init__(

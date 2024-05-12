@@ -845,6 +845,222 @@ def process_one_image(wl,
     
     return cur_key, cur_dict
 
+def process_new_image( wl_fn, mask_fn, input_type = 'mask', Rmm = 126.0 , # value from latest drawings in database
+                      look_distance=0.1, kernel_bandwidthLon=.35, kernel_bandwidthLat=0.08, n_iterations=20,
+                      show=False):
+
+    basename = os.path.splitext(os.path.basename(wl_fn))[0]
+    datetime_tmp = whitelight_to_datetime(basename)
+    datetime_str = datetime_to_db_string(datetime_tmp)
+    date = datetime_str.replace(' ','T')
+
+    try:        
+        m, h = utils.open_and_add_celestial(wl_fn)
+        corrected = False
+        if not 'DATE-OBS' in h:
+            # print('corrected')
+            m, h = utils.open_and_add_celestial2(wl_fn, date_obs=date)
+            corrected = True
+
+
+        # pre-2005 images have their data image flipped vertically
+
+        flip_time = "2003-03-08T00:00:00"
+        should_flip = (datetime.fromisoformat(date) - datetime.fromisoformat(flip_time)) < timedelta(0)
+        if should_flip:
+            m = sunmap.Map(np.flip(m.data,axis=0), h)
+
+
+
+    #     m, h = utils.open_and_add_celestial2(wl_list[tmp_idx], date_obs=date)
+        wcs = WCS(h)
+        # wcs.heliographic_observer = m.observer_coordinate
+        origin = m.data.shape[0]//2, m.data.shape[1]//2
+        
+        # On a besoin des coordonnées pixel des bboxes après correction de l'angle Solaire ->> on doit 
+        # calculer un wcs transformé 
+        m_rot = m.rotate(angle=-h["SOLAR_P0"] * u.deg, missing=0)
+        top_right = SkyCoord( 1000 * u.arcsec, 1000 * u.arcsec, frame=m_rot.coordinate_frame)
+        bottom_left = SkyCoord(-1000 * u.arcsec, -1000 * u.arcsec, frame=m_rot.coordinate_frame)
+        m_rot_submap = m_rot.submap(bottom_left, top_right=top_right)
+        m_rot_submap_shape = m_rot_submap.data.shape
+        m_rot_shape = m_rot.data.shape
+        deltashapeX = np.abs(m_rot_shape[0]-m_rot_submap_shape[0])
+        deltashapeY = np.abs(m_rot_shape[1]-m_rot_submap_shape[1]) 
+
+        h2 = m_rot_submap.fits_header 
+        h2.append(('CTYPE1', 'HPLN-TAN'))
+        h2.append(('CTYPE2', 'HPLT-TAN'))
+        wcs2 = WCS(h2)
+
+        # wcs2.heliographic_observer = m_rot_submap.observer_coordinate
+
+        basename2 = os.path.splitext(os.path.basename(wl_fn))[0]
+        if input_type == "mask":
+            mask = io.imread(mask_fn)
+        elif input_type == "confidence_map":
+            mask = np.load(mask_fn)
+        mask[mask>0] = 1
+
+        # print('should_flip', should_flip)
+        if should_flip:
+            mask = np.flip(mask,axis=0)
+            disp_mask = rotate_CV_bound(mask, angle=h["SOLAR_P0"], interpolation=cv2.INTER_NEAREST) #rotate(mask, angle=h["SOLAR_P0"], reshape=True)     
+        else:       
+            disp_mask = rotate_CV_bound(mask, angle=h["SOLAR_P0"], interpolation=cv2.INTER_NEAREST) #rotate(mask, angle=h["SOLAR_P0"], reshape=True)
+        
+        disp_mask = disp_mask[deltashapeX//2:disp_mask.shape[0]-deltashapeX//2,
+                            deltashapeY//2:disp_mask.shape[1]-deltashapeY//2] 
+
+        cur_key = basename
+        cur_dict = {}
+        cur_dict['should_flip'] = should_flip
+
+        # sunspots_pixel, _ = get_sunspots4(h2, m_rot_submap, disp_mask, Rmm, sky_coords=False)
+        # sunspots_sk, sunspots_areas = get_sunspots4(h2, m_rot_submap, disp_mask, Rmm, sky_coords=True)   
+        sunspots_pixel, _ = get_sunspots3(h2, m_rot_submap, disp_mask, sky_coords=False)
+        sunspots_sk, sunspots_areas = get_sunspots3(h2, m_rot_submap, disp_mask, sky_coords=True)  
+
+        # if show:
+        #     fig, ax = plt.subplots(1,2, figsize=(10,5))
+        #     ax[0].imshow(disp_mask)
+        #     ax[1].imshow(disp_mask)
+        #     for i, sk in enumerate(sunspots_pixel):
+        #         ax[1].scatter(sk[1], sk[0], s=10, c='r')
+        #     fig.show()
+
+
+        ms_centroids = []
+        ms_group_sunspots = []
+        ms_group_areas = []
+        
+        
+        if sunspots_pixel is None:
+            cur_dict['SOLAR_P0'] = h["SOLAR_P0"]
+            cur_dict['deltashapeX'] = deltashapeX
+            cur_dict['deltashapeY'] = deltashapeY
+            
+            cur_dict['seg'] = {}
+            cur_dict['meanshift'] = { 
+                                        "centroids": [],"groups": [],"areas": [],
+                                        "centroids_px": [],"groups_px": [],
+                                    }
+            cur_dict['kmeans'] = {"centroids": [],"groups": [],"areas": []}
+        else:
+            sk_Lon = sunspots_sk.lon.rad
+            sk_Lat = sunspots_sk.lat.rad
+            sk_LatLon = np.stack((sk_Lat,sk_Lon),axis=1)
+        
+            nan_indexes = np.unique(np.argwhere(np.isnan(sk_LatLon))[:,0])
+            clean = (~np.isnan(sk_Lon) & ~np.isnan(sk_Lat))
+        #     print(clean)
+            if len(nan_indexes) > 0:
+                sunspots_sk = sunspots_sk[clean]
+                sunspots_pixel = sunspots_pixel[clean]
+                sunspots_areas = (np.array(sunspots_areas)[clean]).tolist()
+                sk_LatLon = sk_LatLon [clean]
+
+    #         print("sk_LatLon", sk_LatLon)
+
+            if len(sk_LatLon)==0:
+                cur_dict['SOLAR_P0'] = h["SOLAR_P0"]
+                cur_dict['deltashapeX'] = deltashapeX
+                cur_dict['deltashapeY'] = deltashapeY
+                
+                cur_dict['seg'] = {}
+                cur_dict['meanshift'] = { 
+                                        "centroids": [],"groups": [],"areas": [],
+                                        "centroids_px": [],"groups_px": [],
+                                        }
+                cur_dict['kmeans'] = {"centroids": [],"groups": [],"areas": []}
+            
+            else:    
+                sun_center = np.array([disp_mask.shape[0]//2,disp_mask.shape[1]//2])
+                
+                try:
+                    sunspots_areas_mmHem =[get_muHem_area(h2, Rmm, sunspots_pixel[i], sunspots_areas[i],sun_center)
+                                                    for i, sk in enumerate(sunspots_sk)]
+                except IndexError:
+                    print(wl_fn)
+                    raise(IndexError)
+
+                ############ Mean-Shift
+
+                ms_model = ms.Mean_Shift(look_distance, kernel_bandwidthLon, kernel_bandwidthLat, sunspots_sk.radius.km[0], n_iterations,
+                                        max_scaled_area_muHem=200)
+                ms_model.fit(sk_LatLon, sunspots_areas_mmHem)
+    
+                ms_centroids = ms_model.centroids
+
+                try:
+                    sk_sequ_meanshift = SkyCoord(ms_centroids[:,1]*u.rad, ms_centroids[:,0]*u.rad , frame=frames.HeliographicCarrington,
+                                obstime=m.date, observer="earth")
+                except IndexError:
+                    raise IndexError
+                
+                # if show:
+                    # fig, ax = plt.subplots(1,2, figsize=(10,5))
+                    # fig.clear()
+                    # ax1 = fig.add_subplot(121,projection=m)
+                    # m.plot(axes=ax1, interpolation='None')
+                    # ax1.plot_coord(sk_sequ_meanshift, 'o', color='r')
+                    # ax2 = fig.add_subplot(122)
+                    # ax2.imshow(m.data, cmap='gray')
+                    # for i, sk in enumerate(sunspots_pixel):
+                    #     ax2.scatter(sk[1], sk[0], s=10, c='r')
+                    # fig.show()
+
+    
+                pix_centers_meanshift = np.array(skycoord_to_pixel(sk_sequ_meanshift, wcs2, origin=0)).T
+                # pix_centers_meanshift = np.array(skycoord_to_pixel(sk_sequ_meanshift, wcs, origin=0)).T
+    
+                pix_centers_meanshift = pix_centers_meanshift.tolist()
+
+                ms_classifications = ms_model.predict(sk_LatLon)
+     
+                ms_group_sunspots = [(sk_LatLon[ms_classifications == c].tolist()) for c in np.unique(ms_classifications)]
+     
+                ms_group_sunspots_px = [sunspots_pixel[ms_classifications == c].tolist() for c in np.unique(ms_classifications)]
+                # invert x and y
+                ms_group_sunspots_px = [[[x[1],x[0]] for x in group] for group in ms_group_sunspots_px]
+
+                ms_group_areas = [ np.sum(np.array(sunspots_areas_mmHem)[ms_classifications == c])
+                                                            for c in np.unique(ms_classifications)]
+                
+                # if show:
+                    # fig, ax = plt.subplots(1,2, figsize=(10,5))
+                    # fig.clear()
+                    # ax1 = fig.add_subplot(121)
+                    # ax1.imshow(m.data, cmap="gray", interpolation='None')
+                    # tmp_pix_y = [x[1] for x in pix_centers_meanshift]
+                    # tmp_pix_x = [x[0] for x in pix_centers_meanshift]
+                    # ax1.scatter(tmp_pix_x, tmp_pix_y, s=10, c='r')
+
+                    # ax2 = fig.add_subplot(122) # Attention, this axis overlays results(obtained on rotated image)
+                                                # on the original image, The discrepancy is normal
+                    # ax2.imshow(m.data, cmap="gray", interpolation='None')
+                    # for cur_group_px in ms_group_sunspots_px:
+                    #     tmp_pix_y = [x[0] for x in cur_group_px]
+                    #     tmp_pix_x = [x[1] for x in cur_group_px]
+                    #     ax2.scatter(tmp_pix_x, tmp_pix_y, s=5, c='b', alpha=.5)
+                    # fig.show()
+
+                cur_dict['SOLAR_P0'] = h["SOLAR_P0"]
+                cur_dict['deltashapeX'] = deltashapeX
+                cur_dict['deltashapeY'] = deltashapeY
+            
+                cur_dict['seg'] = {i: {'pos': sk.tolist(), "area": str(sunspots_areas[i])}  for i, sk in enumerate(sk_LatLon) }
+                cur_dict['meanshift'] = { "centroids": ms_centroids.tolist(), 
+                                            "groups": ms_group_sunspots,
+                                            "areas": ms_group_areas,
+                                            "centroids_px": pix_centers_meanshift, 
+                                            "groups_px": ms_group_sunspots_px,  
+                                        }
+    except:
+        print(f'error in {basename}')
+        raise
+    
+    return cur_key, cur_dict, (m_rot_submap, h2, wcs2, disp_mask)
 
 
 def grouplist2bboxes(group_list, drawing_radius_px):

@@ -6,6 +6,7 @@ from .image import (
     InputHistoCallback,
     SavePredictionMaskCallback,
     SavePredictionMaskCallback2,
+    reconstruct_segmentation_image
 )
 from .DeepsunImage import (
     DeepsunPlotTrainCallback,
@@ -22,4 +23,5 @@ from .classification import (
     ShowMcIntoshClassificationPredictionsCallback,
     ShowMcIntoshClassificationInputOutputsCallback,
     McIntoshClassificationFailureCasesCallback,
+    display_classification_predictions,
 )

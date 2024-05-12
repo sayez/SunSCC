@@ -204,7 +204,7 @@ def display_predictions_batchMcIntosh(batch, image_key, predictions, mappers):
     bs = image.shape[0]
     
     log.debug(image.ndim)
-   
+    
     if image.ndim == 4:
    
         fig, ax = plt.subplots(nrows=1 ,ncols=bs, figsize=(3*bs,3),  dpi=200)
@@ -314,6 +314,70 @@ class ShowMcIntoshClassificationPredictionsCallback(pl.Callback):
         McIntosh_hat = c1_hat,c2_hat,c3_hat
 
         display_first_channel_batchMcIntosh(batch, 'image', McIntosh_hat, McIntosh, inverted_mappers)
+
+def display_predictions_batchMcIntosh_v2(batch, image_key, predictions, mappers):
+    image = batch[image_key]*3500
+    image = torch.flip(image,[-2,-1])
+    image = image.cpu()
+
+    bs = image.shape[0]
+    
+    log.debug(image.ndim)
+    
+    if image.ndim == 4:
+   
+        fig, ax = plt.subplots(nrows=bs ,ncols=1, figsize=(2,2*bs))
+        # fig, ax = plt.subplots(nrows=1 ,ncols=bs, figsize=(3*bs,3),  dpi=200)
+
+        for i in range(bs):
+   
+            img = image[i, 0, :, :].cpu().numpy()
+
+            pred_C1 = str(predictions[0][i].cpu().numpy())
+            pred_C2 = str(predictions[1][i].cpu().numpy())
+            pred_C3 = str(predictions[2][i].cpu().numpy())
+
+            strMcIntosh = mappers[0][pred_C1] + mappers[1][pred_C2] + mappers[2][pred_C3]
+
+            ax[i].set_title(f"Pred: {strMcIntosh}")
+        
+            normalize = matplotlib.colors.Normalize(vmin=0, vmax=4000)
+            ax[i].imshow(img, cmap='gray', norm = normalize)
+            ax[i].axis('off')
+        
+        fig.tight_layout()
+        plt.show()
+        # plt.close(fig)
+
+def display_classification_predictions(batch, predictions, c1_mapper, c2_mapper, c3_mapper):
+
+    used_c1 = c1_mapper.items()
+    used_c2 = c2_mapper.items()
+    used_c3 = c3_mapper.items()
+
+    inverted_mappers =   ({str(v): k  for k,v in used_c1 } ,
+                            {str(v): k  for k,v in used_c2 },
+                            {str(v): k  for k,v in used_c3 })
+    
+    c1,c2,c3 = batch['class1'], batch['class2'], batch['class3']
+
+    c1_hat,c2_hat,c3_hat = predictions
+    
+    c1_hat = F.softmax(c1_hat, dim=1)
+    c2_hat = F.softmax(c2_hat, dim=1)
+    c3_hat = F.softmax(c3_hat, dim=1)
+    # print(classification, 'vs', classification_hat)
+    c1_hat = torch.argmax(c1_hat,dim=1)
+    c2_hat = torch.argmax(c2_hat,dim=1)
+    c3_hat = torch.argmax(c3_hat,dim=1)
+    # print(classification, 'vs', classification_hat)
+
+    # McIntosh = c1,c2,c3
+    McIntosh_hat = c1_hat,c2_hat,c3_hat
+
+    # print("HERE")
+
+    display_predictions_batchMcIntosh_v2(batch, 'image', McIntosh_hat, inverted_mappers)
 
 class McIntoshAngularCorrectnessCallback(pl.Callback):
     def __init__(self, normalize=None) -> None:

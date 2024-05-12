@@ -449,6 +449,129 @@ def find_matchings_one_image(cur_huge_dict, huge_db_dict, basename, wl_dir, mask
         return basename, out_groups, cur_out_stats
 
 
+from sunscc.utils.clustering.clustering_utilities import datetime_to_db_string, whitelight_to_datetime
 
+def find_groups_one_image(wl_fn, mask_fn, cur_image_dict, Rpx, input_type='mask'):
+    # cur_image_dict = cur_huge_dict[basename]      
+    angle = cur_image_dict["SOLAR_P0"]
+    deltashapeX = cur_image_dict["deltashapeX"]
+    deltashapeY = cur_image_dict["deltashapeY"]
+    
+    basename  = os.path.basename(wl_fn).split('.')[0]
+    datetime_tmp = whitelight_to_datetime(basename)
+    datetime_str = datetime_to_db_string(datetime_tmp)
+    date = datetime_str.replace(' ','T')
+    
+    # group_list = cur_image_dict['db']
+    
+    ms_dict = cur_image_dict['meanshift']
+
+    ms_members = ms_dict['groups_px']
+
+    # print('ms_dict: ', ms_dict)
+    
+    centroids = np.array(ms_dict["centroids"])
+    centroids_px = np.array(ms_dict["centroids_px"])
+
+    ####### Get image stuff
+
+    # open the image
+    image = np.array(io.imread(wl_fn))
+    image = c_utils.rotate_CV_bound(image, angle, interpolation=cv2.INTER_NEAREST)
+    image = image[deltashapeX//2:image.shape[0]-deltashapeX//2,
+                        deltashapeY//2:image.shape[1]-deltashapeY//2]
+
+    # open the mask
+    # mask = np.array(io.imread(os.path.join(masks_dir, basename + '.png')))
+    if input_type == "mask":
+        mask = io.imread(mask_fn)
+    elif input_type == "confidence_map":
+        mask = np.load(mask_fn)
+    mask[mask>0] = 1
+
+    flip_time = "2003-03-08T00:00:00"
+    should_flip = (datetime.fromisoformat(date) - datetime.fromisoformat(flip_time)) < timedelta(0)
+    if should_flip: 
+        image = np.flip(image,axis=0)
+        mask = np.flip(mask,axis=0)
+            
+    msk = c_utils.expand_small_spots(mask)
+
+
+    # rotate the mask
+    mask = c_utils.rotate_CV_bound(mask, angle, interpolation=cv2.INTER_NEAREST)
+    mask = mask[deltashapeX//2:mask.shape[0]-deltashapeX//2,
+                        deltashapeY//2:mask.shape[1]-deltashapeY//2] 
+    # print(np.unique(mask))
+    # print(ms_dict['groups_px'])
+
+
+    
+    # invert x and y
+    ms_members_2 = [np.array([[pt[1], pt[0]] for pt in group]) for group in ms_members]
+    group_masks = [c_utils.get_mask_from_coords(mask, members) for members in ms_members_2]
+
+    # print(group_masks)
+    # for m in group_masks:
+    #     print(np.unique(m))
+        
+    
+    groups_bboxes = [c_utils.get_bbox_from_mask(mask) for mask in group_masks]
+    groups_bboxes = [(b[1], b[0], b[3], b[2]) for b in groups_bboxes]
+
+    R_pixel = Rpx
+    sun_center = mask.shape[1]//2, mask.shape[0]//2
+
+    cur_out_groups = []
+    for i, centroid in enumerate(centroids_px):
+        # for pt in ms_members[i]:
+        for pt in ms_members_2[i]:
+            # print('pt: ', pt)
+            assert c_utils.contains_sunspot(groups_bboxes[i],pt), "pt: {} not in bbox: {}".format(pt, groups_bboxes[i])
+
+
+        # dr_pixpos = np.array([group_list[i]['posx'], group_list[i]['posy']])
+        pix_pos = np.array(centroid)
+        inverted_pix_pos = np.array([pix_pos[1], pix_pos[0]])
+        
+                                       #get_angle2(pix_pos, sun_radius, sun_center)
+        # print()
+        # print(pix_pos, R_pixel, sun_center)
+        angular_excentricity =  c_utils.get_angle2(pix_pos, R_pixel, sun_center)
+        # angular_excentricity =  c_utils.get_angle2(inverted_pix_pos, R_pixel, sun_center)
+        # print(angular_excentricity)
+        # print()
+        
+        cur_group_dict={
+                        "centroid_px": centroids_px[i],
+                        "centroid_Lat": centroids[i][0],
+                        "centroid_Lon": centroids[i][1],
+                        "angular_excentricity_rad": angular_excentricity,
+                        "angular_excentricity_deg": np.rad2deg(angular_excentricity),
+                        "Zurich":   "?",
+                        "McIntosh": "?-?-?",
+                        "members": ms_members[i],
+                        "members_mean_px": np.mean(ms_members[i], axis=0),
+                    }
+        
+        
+        cur_out_groups.append(cur_group_dict)
+
+
+
+    out_groups = {}
+    if len(cur_out_groups) > 0:
+        out_groups = { "angle": angle,
+                                    "deltashapeX":deltashapeX,
+                                    "deltashapeY":deltashapeY,
+                                    "groups": cur_out_groups,
+                                }
+
+
+
+
+
+
+    return basename, out_groups
 
 

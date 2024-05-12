@@ -28,6 +28,7 @@ class SunSCCDataModule(pl.LightningDataModule):
         self.train_ds = train_dataset
         self.val_ds = val_dataset
         self.test_ds = test_dataset
+        self.predict_ds = None
 
         # print(self.data_dir)
 
@@ -91,7 +92,12 @@ class SunSCCDataModule(pl.LightningDataModule):
         )
 
     def predict_dataloader(self) -> DataLoader:
+        # print("HERE")
         return DataLoader(
-            self.test_ds, batch_size=self.batch_size, num_workers=self.num_workers,
+            self.predict_ds, batch_size=self.batch_size, num_workers=self.num_workers,
             shuffle=False,
         )
+    
+    def set_predict_dataset(self, dataset):
+        
+        self.predict_ds = instantiate(dataset, _recursive_=False)
