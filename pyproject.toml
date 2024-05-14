@@ -21,7 +21,7 @@ dependencies = [
     "nibabel",
     "SimpleITK",
     "monai",
-    "albumentations=1.0.3",
+    "albumentations==1.0.3",
     "kornia",
     "einops",
     "k3d",
