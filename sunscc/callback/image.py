@@ -13,7 +13,6 @@ import numpy as np
 from tqdm.auto import tqdm
 import os
 import skimage.io as io
-from itkwidgets import view as view3d
 import ipywidgets as widgets
 from IPython.display import display
 
@@ -163,39 +162,6 @@ class PlotTrainCallback(pl.Callback):
             display_batch(batch, image_key=self.input, segm_key=output_key)
 
 
-def display_batch(batch, image_key, segm_key=None, title_key="_title"):
-    image = batch[image_key].cpu()
-    bs = image.shape[0]
-    log.debug(image.ndim)
-    if image.ndim == 3:
-        s = ...
-    elif image.ndim == 4:
-        s = image.shape[1] // 2
-    if image.ndim == 3:
-        fig, axs = plt.subplots(ncols=bs, figsize=(bs * 5, 10), squeeze=False)
-        for i, ax in enumerate(axs[0]):
-            img = image[i, :, s, :].cpu()
-            ax.imshow(img, cmap="gray")
-            key_title = image_key
-            if segm_key is not None:
-                mask = batch[segm_key][i, :, s, :].cpu()
-                ax.imshow(mask, cmap=cm.hsv, alpha=0.7, interpolation="none")
-                key_title = segm_key
-            title = batch[title_key][i] if title_key in batch else ""
-            ax.set_title(f"{key_title} {title}")
-        plt.show()
-        plt.close(fig)
-    elif image.ndim == 4:
-        children = []
-        for i in range(bs):
-            img = image[i].cpu()
-            if segm_key is not None:
-                mask = batch[segm_key][i].cpu()
-            else:
-                mask = None
-            children.append(view3d(image=img, label_image=mask))
-        tabs = widgets.Tab(children)
-        display(tabs)
 
 
 class SavePredictionMaskCallback(pl.Callback):

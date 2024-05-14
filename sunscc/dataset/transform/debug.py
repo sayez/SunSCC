@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from itkwidgets import view
+
 from monai.transforms import MapTransform, RandomizableTransform, InvertibleTransform
 import numpy as np
 import torch

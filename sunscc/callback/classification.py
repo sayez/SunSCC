@@ -12,7 +12,6 @@ import numpy as np
 from tqdm.auto import tqdm
 import os
 import skimage.io as io
-from itkwidgets import view as view3d
 import ipywidgets as widgets
 from IPython.display import display
 import matplotlib

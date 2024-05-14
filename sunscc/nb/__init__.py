@@ -8,7 +8,6 @@ import skimage
 from tqdm.auto import tqdm
 import k3d
 import vtk
-from itkwidgets import view, compare
 import nibabel as nib
 import cv2
 import ipywidgets as widgets
